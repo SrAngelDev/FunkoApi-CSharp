@@ -1,5 +1,6 @@
 ﻿using CSharpFunctionalExtensions;
 using FunkoApi.Dtos;
+using FunkoApi.Errors;
 using FunkoApi.Models;
 
 namespace FunkoApi.Services.Categorias;
@@ -7,9 +8,9 @@ namespace FunkoApi.Services.Categorias;
 public interface ICategoriaService
 {
     Task<IEnumerable<CategoriaRespondeDto>> GetAllAsync();
-    Task<Result<CategoriaRespondeDto, string>> GetByIdAsync(Guid id);
-    Task<Result<CategoriaRespondeDto, string>> GetByNombreAsync(string nombre);
-    Task<Result<CategoriaRespondeDto, string>> CreateAsync(CategoriaRequestDto categoria);
-    Task<Result<CategoriaRespondeDto, string>> UpdateAsync(Guid id, CategoriaRequestDto categoria);
-    Task<Result<CategoriaRespondeDto, string>> DeleteAsync(Guid id);
+    Task<Result<CategoriaRespondeDto, AppError>> GetByIdAsync(Guid id);
+    Task<Result<CategoriaRespondeDto, AppError>> GetByNombreAsync(string nombre);
+    Task<Result<CategoriaRespondeDto, AppError>> CreateAsync(CategoriaRequestDto dto);
+    Task<Result<CategoriaRespondeDto, AppError>> UpdateAsync(Guid id, CategoriaRequestDto dto);
+    Task<Result<CategoriaRespondeDto, AppError>> DeleteAsync(Guid id);
 }
