@@ -2,19 +2,10 @@
 
 public static class FunkoError
 {
-    public static NotFoundError NotFound(long id) =>
-        NotFoundError.FromId(id, "Funko");
-
-    public static ConflictError NombreDuplicado(string nombre) =>
-        ConflictError.Duplicate("Funko", nombre);
-
-    // Ejemplo de regla de negocio específica para Funkos
-    public static BusinessRuleError PrecioInvalido(decimal precio) =>
-        new($"El precio {precio} no es válido para un Funko de esta categoría");
-
-    public static ValidationError Validacion(string mensaje) =>
-        new(mensaje, new Dictionary<string, string[]>());
-
-    public static ValidationError ValidacionConCampos(Dictionary<string, string[]> errores) =>
-        ValidationError.WithFieldErrors(errores);
+    public static NotFoundError NotFound(long id) => new($"Funko con ID {id} no encontrado");
+    public static ConflictError NombreDuplicado(string nombre) => new($"El Funko con nombre '{nombre}' ya existe");
+    public static BusinessRuleError PrecioInvalido(decimal precio) => new($"El precio {precio} no es válido. Debe ser mayor que cero");
+    public static BusinessRuleError CategoriaNoEncontrada(string categoriaNombre) =>
+        new($"La categoría '{categoriaNombre}' no existe y no se puede asignar al Funko");
+    public static BusinessRuleError ErrorDeValidacion(string mensaje) => new(mensaje);
 }
