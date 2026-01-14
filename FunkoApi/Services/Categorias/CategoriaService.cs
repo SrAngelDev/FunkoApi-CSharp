@@ -14,23 +14,25 @@ public class CategoriaService(
     IMemoryCache cache,
     IValidator<CategoriaRequestDto> validator) : ICategoriaService
 {
-    private readonly string _cacheKey = "categorias_";
+    private const string CacheListKey = "categorias_all";
+    private const string CacheBaseKey = "categoria_"; 
+    private string GetKey(Guid id) => $"{CacheBaseKey}{id}";
     private readonly TimeSpan _cacheTime = TimeSpan.FromMinutes(30);
 
     public async Task<IEnumerable<CategoriaRespondeDto>> GetAllAsync()
     {
-        if (!cache.TryGetValue(_cacheKey, out IEnumerable<CategoriaRespondeDto>? dtos))
+        if (!cache.TryGetValue(CacheListKey, out IEnumerable<CategoriaRespondeDto>? dtos))
         {
             var categorias = await repository.GetAllAsync();
             dtos = categorias.Select(c => new CategoriaRespondeDto(c.Id, c.Nombre)).ToList();
-            cache.Set(_cacheKey, dtos, _cacheTime);
+            cache.Set(CacheListKey, dtos, _cacheTime);
         }
         return dtos!;
     }
 
     public async Task<Result<CategoriaRespondeDto, AppError>> GetByIdAsync(Guid id)
     {
-        string key = _cacheKey + id;
+        string key = GetKey(id);
         if (!cache.TryGetValue(key, out CategoriaRespondeDto? dto))
         {
             var categoria = await repository.GetByIdAsync(id);
@@ -62,7 +64,7 @@ public class CategoriaService(
         var nuevaCategoria = await repository.CreateAsync(new Categoria {Nombre =  dto.Nombre});
         
         //Eliminamos la vieja cache ya que si volvemos a llamar a todos al buscar primero en la cache devuelve datos obsoletos
-        cache.Remove(_cacheKey);
+        cache.Remove(CacheListKey);
         
         return Result.Success<CategoriaRespondeDto, AppError>(new CategoriaRespondeDto(nuevaCategoria.Id, nuevaCategoria.Nombre));
     }
@@ -72,8 +74,8 @@ public class CategoriaService(
         if (actualizado == null) return Result.Failure<CategoriaRespondeDto, AppError>(CategoriaError.NotFound(id));
 
         // Invalidamos la cache vieja y la del objeto
-        cache.Remove(_cacheKey);
-        cache.Remove($"categoria_{id}");
+        cache.Remove(CacheListKey);
+        cache.Remove(GetKey(id));
 
         return Result.Success<CategoriaRespondeDto, AppError>(new CategoriaRespondeDto(actualizado.Id, actualizado.Nombre));
     }
@@ -86,8 +88,9 @@ public class CategoriaService(
             return Result.Failure<CategoriaRespondeDto, AppError>(CategoriaError.NotFound(id));
         }
 
-        cache.Remove(_cacheKey);
-        cache.Remove($"categoria_{id}");
+        // Invalidamos la cache vieja y la del objeto
+        cache.Remove(CacheListKey);
+        cache.Remove(GetKey(id));
 
         return Result.Success<CategoriaRespondeDto, AppError>(new CategoriaRespondeDto(eliminado.Id, eliminado.Nombre));
     }
