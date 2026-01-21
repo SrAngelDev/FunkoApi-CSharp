@@ -6,6 +6,7 @@ using FunkoApi.Services.Funkos;
 using FunkoApi.Validators.Funkos;
 using Microsoft.EntityFrameworkCore;
 using FluentValidation;
+using FunkoApi.Storage;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +24,7 @@ builder.Services.AddScoped<ICategoriaRepository, CategoriaRepository>();
 // 4. Servicios (Capa de Negocio)
 builder.Services.AddScoped<IFunkoService, FunkoService>();
 builder.Services.AddScoped<ICategoriaService, CategoriaService>();
+builder.Services.AddScoped<IStorageService, LocalStorageService>();
 
 // 5. Validadores (FluentValidation)
 builder.Services.AddValidatorsFromAssemblyContaining<FunkoRequestValidator>();
@@ -39,14 +41,14 @@ builder.Services.AddProblemDetails();
 
 var app = builder.Build();
 
-// --- PIPELINE DE PETICIONES HTTP ---
-
 // Configuración para entorno de desarrollo
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseStaticFiles(); 
 
 app.UseHttpsRedirection();
 
