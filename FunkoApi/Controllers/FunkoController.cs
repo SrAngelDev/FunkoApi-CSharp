@@ -1,7 +1,9 @@
 ﻿using FunkoApi.Dtos;
 using FunkoApi.Errors;
+using FunkoApi.Models;
 using Microsoft.AspNetCore.Mvc;
 using FunkoApi.Services.Funkos;
+using Microsoft.AspNetCore.Authorization;
 
 namespace FunkoApi.Controllers;
 
@@ -30,6 +32,7 @@ public class FunkosController(IFunkoService service) : ControllerBase
     }
     
     [HttpPost]
+    [Authorize(Roles = Roles.Admin)]
     public async Task<ActionResult<FunkoResponseDto>> Create([FromBody] FunkoRequestDto dto)
     {
         var result = await service.CreateAsync(dto);
@@ -43,6 +46,7 @@ public class FunkosController(IFunkoService service) : ControllerBase
     }
     
     [HttpPut("{id}")]
+    [Authorize(Roles = Roles.Admin)]
     public async Task<ActionResult<FunkoResponseDto>> Update(long id, [FromBody] FunkoRequestDto dto)
     {
         var result = await service.UpdateAsync(id, dto);
@@ -58,6 +62,7 @@ public class FunkosController(IFunkoService service) : ControllerBase
     // PATCH: api/funkos/5/imagen
     [HttpPatch("{id}/imagen")]
     [Consumes("multipart/form-data")] // Importante para ficheros
+    [Authorize(Roles = Roles.Admin)]
     public async Task<ActionResult<FunkoResponseDto>> UpdateImage(long id, IFormFile file)
     {
         // Validar que mandan algo
@@ -77,6 +82,7 @@ public class FunkosController(IFunkoService service) : ControllerBase
     }
     
     [HttpDelete("{id}")]
+    [Authorize(Roles = Roles.Admin)]
     public async Task<ActionResult> Delete(long id)
     {
         var result = await service.DeleteAsync(id);

@@ -9,4 +9,5 @@ public class FunkoDbContext : DbContext
     
     public DbSet<Funko> Funkos => Set<Funko>();
     public DbSet<Categoria> Categorias => Set<Categoria>();
+    public DbSet<User> Users => Set<User>();
 }

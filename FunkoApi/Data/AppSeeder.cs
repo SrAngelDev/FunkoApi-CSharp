@@ -4,7 +4,7 @@ namespace FunkoApi.Data;
 
 using Microsoft.EntityFrameworkCore;
 
-public static class FunkoSeeder
+public static class AppSeeder
 {
     public static async Task InitializeAsync(IServiceProvider serviceProvider)
     {
@@ -86,6 +86,18 @@ public static class FunkoSeeder
                 UpdatedAt = DateTime.UtcNow 
             }
         };
+        
+        if (!await context.Users.AnyAsync())
+        {
+            var admin = new User
+            {
+                Username = "admin",
+                Email = "admin@funko.com",
+                Password = BCrypt.Net.BCrypt.HashPassword("admin123"),
+                Roles = Roles.Admin
+            };
+            context.Users.Add(admin);
+        }
 
         await context.Funkos.AddRangeAsync(funkos);
         

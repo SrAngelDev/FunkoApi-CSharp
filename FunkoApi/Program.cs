@@ -1,4 +1,5 @@
-﻿using FunkoApi.Data;
+﻿using System.Text;
+using FunkoApi.Data;
 using FunkoApi.Repositories.Categorias;
 using FunkoApi.Repositories.Funkos;
 using FunkoApi.Services.Categorias;
@@ -6,7 +7,10 @@ using FunkoApi.Services.Funkos;
 using FunkoApi.Validators.Funkos;
 using Microsoft.EntityFrameworkCore;
 using FluentValidation;
+using FunkoApi.Auth;
 using FunkoApi.Storage;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,6 +29,27 @@ builder.Services.AddScoped<ICategoriaRepository, CategoriaRepository>();
 builder.Services.AddScoped<IFunkoService, FunkoService>();
 builder.Services.AddScoped<ICategoriaService, CategoriaService>();
 builder.Services.AddScoped<IStorageService, LocalStorageService>();
+builder.Services.AddScoped<TokenService>();
+builder.Services.AddScoped<AuthService>();
+
+builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = false, // En producción true
+            ValidateAudience = false, // En producción true
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            // Debe coincidir con la clave del TokenService
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? "ClaveSecretaSuperSeguraParaDesarrollo1234!"))
+        };
+    });
 
 // 5. Validadores (FluentValidation)
 builder.Services.AddValidatorsFromAssemblyContaining<FunkoRequestValidator>();
@@ -65,7 +90,7 @@ using (var scope = app.Services.CreateScope())
     try
     {
         // Llamamos al método estático del Seeder
-        await FunkoSeeder.InitializeAsync(services);
+        await AppSeeder.InitializeAsync(services);
     }
     catch (Exception ex)
     {
