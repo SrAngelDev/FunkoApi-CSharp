@@ -14,7 +14,7 @@ public class FunkoRequestValidator : AbstractValidator<FunkoRequestDto>
         RuleFor(x => x.Precio)
             .GreaterThan(0).WithMessage("El precio debe ser un valor positivo");
 
-        RuleFor(x => x.CategoriaNombre)
+        RuleFor(x => x.Nombre)
             .NotEmpty().WithMessage("La categoría asociada es obligatoria");
     }
 }

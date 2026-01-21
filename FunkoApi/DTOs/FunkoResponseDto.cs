@@ -3,8 +3,9 @@
 public record FunkoResponseDto(
     long Id, 
     string Nombre, 
-    CategoriaRespondeDto Categoria, 
+    CategoriaResponseDto? Categoria, 
     decimal Precio, 
+    string Imagen,
     DateTime CreatedAt,
     DateTime UpdatedAt
     );

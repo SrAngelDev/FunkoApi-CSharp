@@ -13,8 +13,9 @@ public class CategoriaRepository(FunkoDbContext context) : ICategoriaRepository
 
     public async Task<Categoria?> GetByIdAsync(Guid id)
     {
-        // Preguntar la diferencia entre usar el primero o el segundo
+        // El primero es ideal para buscar por algo concreto, como en el nombre más abajo
         // return await context.Categorias.FirstOrDefaultAsync(c => c.Id == id);
+        // Este es el ideal para las claves ya que busca automaticamente
         return await context.Categorias.FindAsync(id);
     }
 

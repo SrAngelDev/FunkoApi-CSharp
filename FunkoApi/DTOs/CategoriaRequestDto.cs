@@ -1,6 +1,5 @@
 ﻿namespace FunkoApi.Dtos;
 
-public record CategoriaRespondeDto(
-    Guid Id,
+public record CategoriaRequestDto(
     string Nombre
     );

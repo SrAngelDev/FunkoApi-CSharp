@@ -9,12 +9,16 @@ public class FunkoRepository(FunkoDbContext context) : IFunkoRepository
     
     public async Task<IEnumerable<Funko>> GetAllAsync()
     {
-        return await context.Funkos.ToListAsync();
+        return await context.Funkos
+            .Include(f => f.Categoria) 
+            .ToListAsync();
     }
 
     public async Task<Funko?> GetByIdAsync(long id)
     {
-        return await context.Funkos.FindAsync(id);
+        return await context.Funkos
+            .Include(f => f.Categoria)
+            .FirstOrDefaultAsync(f => f.Id == id);
     }
 
     public async Task<Funko?> CreateAsync(Funko newFunko)
