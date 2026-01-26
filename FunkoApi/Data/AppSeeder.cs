@@ -51,7 +51,7 @@ public static class AppSeeder
             {
                 UserName = "admin",
                 Email = "admin@funko.com",
-                Nombre = "Administrador", // Tu propiedad personalizada
+                Nombre = "Administrador",
                 EmailConfirmed = true
             };
             
