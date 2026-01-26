@@ -8,8 +8,10 @@ using FunkoApi.Validators.Funkos;
 using Microsoft.EntityFrameworkCore;
 using FluentValidation;
 using FunkoApi.Auth;
+using FunkoApi.Models;
 using FunkoApi.Storage;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -31,6 +33,21 @@ builder.Services.AddScoped<ICategoriaService, CategoriaService>();
 builder.Services.AddScoped<IStorageService, LocalStorageService>();
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<AuthService>();
+
+builder.Services.AddIdentity<User, IdentityRole<long>>(options =>
+    {
+        // Configuración de políticas de contraseña (ejemplo de WalaDaw)
+        options.Password.RequireDigit = true;
+        options.Password.RequireLowercase = true;
+        options.Password.RequireUppercase = true;
+        options.Password.RequireNonAlphanumeric = false;
+        options.Password.RequiredLength = 6;
+    
+        // Configuración de usuario
+        options.User.RequireUniqueEmail = true;
+    })
+    .AddEntityFrameworkStores<FunkoDbContext>()
+    .AddDefaultTokenProviders();
 
 builder.Services.AddAuthentication(options =>
     {

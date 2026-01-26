@@ -1,13 +1,24 @@
 ﻿using FunkoApi.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace FunkoApi.Data;
 
-public class FunkoDbContext : DbContext
+public class FunkoDbContext(DbContextOptions<FunkoDbContext> options) 
+    : IdentityDbContext<User, IdentityRole<long>, long>(options)
 {
-    public FunkoDbContext(DbContextOptions<FunkoDbContext> options) : base(options) { }
-    
     public DbSet<Funko> Funkos => Set<Funko>();
     public DbSet<Categoria> Categorias => Set<Categoria>();
-    public DbSet<User> Users => Set<User>();
+
+    protected override void OnModelCreating(ModelBuilder builder)
+    {
+        base.OnModelCreating(builder);
+        
+        builder.Entity<Funko>(entity => 
+        {
+            entity.Property(f => f.Nombre).IsRequired();
+            entity.Property(f => f.Precio).HasColumnType("decimal(18,2)");
+        });
+    }
 }

@@ -1,108 +1,69 @@
 ﻿using FunkoApi.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace FunkoApi.Data;
-
-using Microsoft.EntityFrameworkCore;
 
 public static class AppSeeder
 {
     public static async Task InitializeAsync(IServiceProvider serviceProvider)
     {
-        // Obtenemos el contexto de la base de datos
+        // Contexto y managers
         using var context = serviceProvider.GetRequiredService<FunkoDbContext>();
+        var userManager = serviceProvider.GetRequiredService<UserManager<User>>();
+        var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole<long>>>();
 
-        // Aseguramos que la BD existe (importante para InMemory)
+        // Aseguramos que la BD existe
         await context.Database.EnsureCreatedAsync();
-
-        // Si ya hay Funkos, no hacemos nada (evita duplicados al reiniciar si usaras BD real)
-        if (await context.Funkos.AnyAsync()) return;
         
-        var catDisney = new Categoria 
-        { 
-            Id = Guid.NewGuid(), 
-            Nombre = "Disney", 
-            CreatedAt = DateTime.UtcNow, 
-            UpdatedAt = DateTime.UtcNow 
-        };
-        
-        var catMarvel = new Categoria 
-        { 
-            Id = Guid.NewGuid(), 
-            Nombre = "Marvel", 
-            CreatedAt = DateTime.UtcNow, 
-            UpdatedAt = DateTime.UtcNow 
-        };
-        
-        var catAnime = new Categoria 
-        { 
-            Id = Guid.NewGuid(), 
-            Nombre = "Anime", 
-            CreatedAt = DateTime.UtcNow, 
-            UpdatedAt = DateTime.UtcNow 
-        };
-
-        await context.Categorias.AddRangeAsync(catDisney, catMarvel, catAnime);
-
-        var funkos = new List<Funko>
+        // Creamos roles si no existen
+        string[] roles = { Roles.Admin, Roles.User };
+        foreach (var role in roles)
         {
-            new Funko 
-            { 
-                Nombre = "Mickey Mouse", 
-                Precio = 15.99m, 
-                CategoriaId = catDisney.Id,
-                CreatedAt = DateTime.UtcNow, 
-                UpdatedAt = DateTime.UtcNow 
-            },
-            new Funko 
-            { 
-                Nombre = "Iron Man", 
-                Precio = 19.50m, 
-                CategoriaId = catMarvel.Id,
-                CreatedAt = DateTime.UtcNow, 
-                UpdatedAt = DateTime.UtcNow 
-            },
-            new Funko 
-            { 
-                Nombre = "Spider-Man No Way Home", 
-                Precio = 22.00m, 
-                CategoriaId = catMarvel.Id,
-                CreatedAt = DateTime.UtcNow, 
-                UpdatedAt = DateTime.UtcNow 
-            },
-            new Funko 
-            { 
-                Nombre = "Naruto Uzumaki", 
-                Precio = 14.99m, 
-                CategoriaId = catAnime.Id,
-                CreatedAt = DateTime.UtcNow, 
-                UpdatedAt = DateTime.UtcNow 
-            },
-             new Funko 
-            { 
-                Nombre = "Stitch", 
-                Precio = 18.99m, 
-                CategoriaId = catDisney.Id,
-                CreatedAt = DateTime.UtcNow, 
-                UpdatedAt = DateTime.UtcNow 
+            if (!await roleManager.RoleExistsAsync(role))
+            {
+                await roleManager.CreateAsync(new IdentityRole<long>(role));
             }
-        };
-        
-        if (!await context.Users.AnyAsync())
+        }
+
+        // Seed inicial de categorias y funkos
+        if (!await context.Categorias.AnyAsync())
+        {
+            var catDisney = new Categoria { Id = Guid.NewGuid(), Nombre = "Disney", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
+            var catMarvel = new Categoria { Id = Guid.NewGuid(), Nombre = "Marvel", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
+            var catAnime = new Categoria { Id = Guid.NewGuid(), Nombre = "Anime", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
+
+            await context.Categorias.AddRangeAsync(catDisney, catMarvel, catAnime);
+            
+            var funkos = new List<Funko>
+            {
+                new Funko { Nombre = "Mickey Mouse", Precio = 15.99m, CategoriaId = catDisney.Id, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
+                new Funko { Nombre = "Iron Man", Precio = 19.50m, CategoriaId = catMarvel.Id, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
+                new Funko { Nombre = "Stitch", Precio = 18.99m, CategoriaId = catDisney.Id, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow }
+            };
+            await context.Funkos.AddRangeAsync(funkos);
+        }
+
+        // Creamos un usuario administrador si no existe
+        if (await userManager.FindByNameAsync("admin") == null)
         {
             var admin = new User
             {
-                Username = "admin",
+                UserName = "admin",
                 Email = "admin@funko.com",
-                Password = BCrypt.Net.BCrypt.HashPassword("admin123"),
-                Roles = Roles.Admin
+                Nombre = "Administrador", // Tu propiedad personalizada
+                EmailConfirmed = true
             };
-            context.Users.Add(admin);
+            
+            var result = await userManager.CreateAsync(admin, "Admin123!"); 
+            
+            if (result.Succeeded)
+            {
+                await userManager.AddToRoleAsync(admin, Roles.Admin);
+            }
         }
 
-        await context.Funkos.AddRangeAsync(funkos);
-        
         await context.SaveChangesAsync();
-        
-        Console.WriteLine("✅ Seed Data realizado correctamente: Categorías y Funkos creados.");
+        Console.WriteLine("✅ Seed Data realizado correctamente: Roles, Usuarios y Funkos procesados.");
     }
 }
