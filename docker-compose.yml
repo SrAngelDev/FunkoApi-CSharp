@@ -1,0 +1,23 @@
+services:
+  # Base de datos PostgreSQL
+  postgres:
+    image: postgres:15
+    container_name: funko_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: FunkoDb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Caché Redis
+  redis:
+    image: redis:alpine
+    container_name: funko_redis
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres_data:

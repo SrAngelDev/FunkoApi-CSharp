@@ -14,7 +14,7 @@ public static class AppSeeder
         var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole<long>>>();
 
         // Aseguramos que la BD existe
-        await context.Database.EnsureCreatedAsync();
+        await context.Database.MigrateAsync();
         
         // Creamos roles si no existen
         string[] roles = { Roles.Admin, Roles.User };

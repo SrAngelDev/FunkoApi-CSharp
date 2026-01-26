@@ -1,54 +1,80 @@
-﻿using CSharpFunctionalExtensions;
+﻿using System.Text.Json;
+using CSharpFunctionalExtensions;
 using FluentValidation;
 using FunkoApi.Dtos;
 using FunkoApi.Errors;
 using FunkoApi.Errors.Funkos;
 using FunkoApi.Repositories.Categorias;
 using FunkoApi.Repositories.Funkos;
-using Microsoft.Extensions.Caching.Memory;
 using FunkoApi.Mappers;
 using FunkoApi.Storage;
+using Microsoft.Extensions.Caching.Distributed;
 
 namespace FunkoApi.Services.Funkos;
 
 public class FunkoService(
     IFunkoRepository repository,
     ICategoriaRepository categoriaRepository,
-    IMemoryCache cache,
+    IDistributedCache cache,
     IValidator<FunkoRequestDto> validator,
-    IStorageService storage) : IFunkoService
+    IStorageService storage,
+    ILogger<FunkoService> logger) : IFunkoService
 {
-    private const string CacheListKey = "funkos_all";
-    private const string CacheBaseKey = "funko_";
-    private readonly TimeSpan _cacheTime = TimeSpan.FromMinutes(30);
-    
-    private string GetKey(long id) => $"{CacheBaseKey}{id}";
+    // Configuración de expiración para Redis
+    private readonly DistributedCacheEntryOptions _cacheOptions = new()
+    {
+        AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30)
+    };
+
+    private const string CacheKeyAll = "funkos_all";
+    private static string GetKey(long id) => $"funko_{id}";
 
     public async Task<IEnumerable<FunkoResponseDto>> GetAllAsync()
     {
-        if (!cache.TryGetValue(CacheListKey, out IEnumerable<FunkoResponseDto>? dtos))
+        // Buscamos en cache
+        var cachedData = await cache.GetStringAsync(CacheKeyAll);
+        
+        if (!string.IsNullOrEmpty(cachedData))
         {
-            var funkos = await repository.GetAllAsync();
-            dtos = funkos.Select(f => f.ToResponseDto()).ToList();
-            cache.Set(CacheListKey, dtos, _cacheTime);
+            logger.LogInformation("--> Obteniendo Funkos desde Redis Cache");
+            // Deserializamos el JSON de vuelta a objetos 
+            return JsonSerializer.Deserialize<IEnumerable<FunkoResponseDto>>(cachedData)!;
         }
-        return dtos!;
+
+        // Si no está en caché, buscar en BD
+        logger.LogInformation("--> Obteniendo Funkos desde Base de Datos");
+        var funkos = await repository.GetAllAsync();
+        var response = funkos.Select(f => f.ToResponseDto()).ToList();
+
+        // Guardar en cache
+        var jsonResponse = JsonSerializer.Serialize(response);
+        await cache.SetStringAsync(CacheKeyAll, jsonResponse, _cacheOptions);
+
+        return response;
     }
 
     public async Task<Result<FunkoResponseDto, AppError>> GetByIdAsync(long id)
     {
         string key = GetKey(id);
-        if (!cache.TryGetValue(key, out FunkoResponseDto? dto))
+        var cachedData = await cache.GetStringAsync(key);
+        
+        if (!string.IsNullOrEmpty(cachedData))
         {
-            var funko = await repository.GetByIdAsync(id);
-            
-            if (funko == null) 
-                return Result.Failure<FunkoResponseDto, AppError>(FunkoError.NotFound(id));
-
-            dto = funko.ToResponseDto();
-            cache.Set(key, dto, _cacheTime);
+            logger.LogInformation($"--> Obteniendo Funko {id} desde Redis Cache");
+            return Result.Success<FunkoResponseDto, AppError>(JsonSerializer.Deserialize<FunkoResponseDto>(cachedData)!);
         }
-        return Result.Success<FunkoResponseDto, AppError>(dto!);
+
+        var funko = await repository.GetByIdAsync(id);
+        
+        if (funko == null) 
+            return Result.Failure<FunkoResponseDto, AppError>(FunkoError.NotFound(id));
+
+        var response = funko.ToResponseDto();
+        
+        // Guardar en cache
+        await cache.SetStringAsync(key, JsonSerializer.Serialize(response), _cacheOptions);
+        
+        return Result.Success<FunkoResponseDto, AppError>(response);
     }
 
     public async Task<Result<FunkoResponseDto, AppError>> CreateAsync(FunkoRequestDto dto)
@@ -58,14 +84,14 @@ public class FunkoService(
         if (!valResult.IsValid) 
             return Result.Failure<FunkoResponseDto, AppError>(new BusinessRuleError(valResult.Errors.First().ErrorMessage));
         
-        var categoria = await categoriaRepository.GetByNombreAsync(dto.Nombre);
+        var categoria = await categoriaRepository.GetByIdAsync(dto.CategoriaId);
         if (categoria == null) 
-            return Result.Failure<FunkoResponseDto, AppError>(FunkoError.CategoriaNoEncontrada(dto.Nombre));
+            return Result.Failure<FunkoResponseDto, AppError>(FunkoError.CategoriaNoEncontrada(dto.CategoriaId.ToString()));
         
         var nuevo = await repository.CreateAsync(dto.ToEntity(categoria.Id));
-        cache.Remove(CacheListKey);
+        await cache.RemoveAsync(CacheKeyAll);
 
-        return Result.Success<FunkoResponseDto, AppError>(nuevo.ToResponseDto());
+        return Result.Success<FunkoResponseDto, AppError>(nuevo!.ToResponseDto());
     }
 
     public async Task<Result<FunkoResponseDto, AppError>> UpdateAsync(long id, FunkoRequestDto dto)
@@ -78,9 +104,9 @@ public class FunkoService(
         if (existente == null) 
             return Result.Failure<FunkoResponseDto, AppError>(FunkoError.NotFound(id));
         
-        var categoria = await categoriaRepository.GetByNombreAsync(dto.Nombre);
+        var categoria = await categoriaRepository.GetByIdAsync(dto.CategoriaId);
         if (categoria == null) 
-            return Result.Failure<FunkoResponseDto, AppError>(FunkoError.CategoriaNoEncontrada(dto.Nombre));
+            return Result.Failure<FunkoResponseDto, AppError>(FunkoError.CategoriaNoEncontrada(dto.CategoriaId.ToString()));
         
         existente.Nombre = dto.Nombre;
         existente.Precio = dto.Precio;
@@ -92,8 +118,8 @@ public class FunkoService(
         if (actualizado == null) 
             return Result.Failure<FunkoResponseDto, AppError>(FunkoError.NotFound(id));
         
-        cache.Remove(CacheListKey); 
-        cache.Remove(GetKey(id));   
+        await cache.RemoveAsync(CacheKeyAll); 
+        await cache.RemoveAsync(GetKey(id));   
         
         return Result.Success<FunkoResponseDto, AppError>(actualizado.ToResponseDto());
     }
@@ -105,8 +131,8 @@ public class FunkoService(
         if (eliminado == null) 
             return Result.Failure<FunkoResponseDto, AppError>(FunkoError.NotFound(id));
         
-        cache.Remove(CacheListKey);
-        cache.Remove(GetKey(id));
+        await cache.RemoveAsync(CacheKeyAll);
+        await cache.RemoveAsync(GetKey(id));
         
 
         return Result.Success<FunkoResponseDto, AppError>(eliminado.ToResponseDto());
@@ -142,8 +168,8 @@ public class FunkoService(
         var actualizado = await repository.UpdateAsync(id, funko);
 
         // Invalidar caché
-        cache.Remove(CacheListKey);
-        cache.Remove(GetKey(id));
+        await cache.RemoveAsync(CacheKeyAll);
+        await cache.RemoveAsync(GetKey(id));
 
         return Result.Success<FunkoResponseDto, AppError>(actualizado!.ToResponseDto());
     }

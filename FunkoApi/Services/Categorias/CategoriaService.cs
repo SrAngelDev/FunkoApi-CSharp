@@ -1,57 +1,73 @@
-﻿using CSharpFunctionalExtensions;
+﻿using System.Text.Json;
+using CSharpFunctionalExtensions;
 using FluentValidation;
 using FunkoApi.Dtos;
 using FunkoApi.Errors;
 using FunkoApi.Errors.Categorias;
 using FunkoApi.Models;
 using FunkoApi.Repositories.Categorias;
-using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Caching.Distributed;
 using FunkoApi.Mappers;
 
 namespace FunkoApi.Services.Categorias;
 
 public class CategoriaService(
     ICategoriaRepository repository,
-    IMemoryCache cache,
-    IValidator<CategoriaRequestDto> validator) : ICategoriaService
+    IDistributedCache cache,
+    IValidator<CategoriaRequestDto> validator,
+    ILogger<CategoriaService> logger) : ICategoriaService
 {
     // Cache
+    private readonly DistributedCacheEntryOptions _cacheOptions = new()
+    {
+        AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30)
+    };
+    
     private const string CacheListKey = "categorias_all";
     private const string CacheBaseKey = "categoria_"; 
     private string GetKey(Guid id) => $"{CacheBaseKey}{id}";
     
-    private readonly TimeSpan _cacheTime = TimeSpan.FromMinutes(30);
-
     public async Task<IEnumerable<CategoriaResponseDto>> GetAllAsync()
     {
-        if (!cache.TryGetValue(CacheListKey, out IEnumerable<CategoriaResponseDto>? dtos))
+        var cachedData = await cache.GetStringAsync(CacheListKey);
+        
+        if (!string.IsNullOrEmpty(cachedData))
         {
-            var categorias = await repository.GetAllAsync();
-            dtos = categorias.Select(c => c.ToResponseDto()).ToList();
-            cache.Set(CacheListKey, dtos, _cacheTime);
+            logger.LogInformation("--> Obteniendo Categorías desde Redis Cache");
+            return JsonSerializer.Deserialize<IEnumerable<CategoriaResponseDto>>(cachedData)!;
         }
-        return dtos!;
+
+        logger.LogInformation("--> Obteniendo Categorías desde Base de Datos");
+        var categorias = await repository.GetAllAsync();
+        var dtos = categorias.Select(c => c.ToResponseDto()).ToList();
+        
+        await cache.SetStringAsync(CacheListKey, JsonSerializer.Serialize(dtos), _cacheOptions);
+        
+        return dtos;
     }
 
     public async Task<Result<CategoriaResponseDto, AppError>> GetByIdAsync(Guid id)
     {
         string key = GetKey(id); 
+        var cachedData = await cache.GetStringAsync(key);
         
-        if (!cache.TryGetValue(key, out CategoriaResponseDto? dto))
+        if (!string.IsNullOrEmpty(cachedData))
         {
-            var categoria = await repository.GetByIdAsync(id);
-            
-            if (categoria == null)
-            {
-                return Result.Failure<CategoriaResponseDto, AppError>(CategoriaError.NotFound(id));
-            }
-            
-            dto = categoria.ToResponseDto();
-            
-            cache.Set(key, dto, _cacheTime);
+            logger.LogInformation($"--> Obteniendo Categoría {id} desde Redis Cache");
+            return Result.Success<CategoriaResponseDto, AppError>(JsonSerializer.Deserialize<CategoriaResponseDto>(cachedData)!);
+        }
+
+        var categoria = await repository.GetByIdAsync(id);
+        
+        if (categoria == null)
+        {
+            return Result.Failure<CategoriaResponseDto, AppError>(CategoriaError.NotFound(id));
         }
         
-        return Result.Success<CategoriaResponseDto, AppError>(dto!);
+        var dto = categoria.ToResponseDto();
+        await cache.SetStringAsync(key, JsonSerializer.Serialize(dto), _cacheOptions);
+        
+        return Result.Success<CategoriaResponseDto, AppError>(dto);
     }
 
     public async Task<Result<CategoriaResponseDto, AppError>> CreateAsync(CategoriaRequestDto dto)
@@ -75,9 +91,9 @@ public class CategoriaService(
         var nuevaEntidad = await repository.CreateAsync(dto.ToEntity());
         
         //Limpiamos la cache
-        cache.Remove(CacheListKey);
+        await cache.RemoveAsync(CacheListKey);
         
-        return Result.Success<CategoriaResponseDto, AppError>(nuevaEntidad.ToResponseDto());
+        return Result.Success<CategoriaResponseDto, AppError>(nuevaEntidad!.ToResponseDto());
     }
     
     public async Task<Result<CategoriaResponseDto, AppError>> UpdateAsync(Guid id, CategoriaRequestDto dto) 
@@ -106,8 +122,8 @@ public class CategoriaService(
         }
 
         // 4. Invalidar cache
-        cache.Remove(CacheListKey);
-        cache.Remove(GetKey(id));
+        await cache.RemoveAsync(CacheListKey);
+        await cache.RemoveAsync(GetKey(id));
 
         return Result.Success<CategoriaResponseDto, AppError>(new CategoriaResponseDto(actualizado.Id, actualizado.Nombre));
     }
@@ -121,8 +137,8 @@ public class CategoriaService(
         }
 
         // Invalidamos la cache vieja y la del objeto
-        cache.Remove(CacheListKey);
-        cache.Remove(GetKey(id));
+        await cache.RemoveAsync(CacheListKey);
+        await cache.RemoveAsync(GetKey(id));
 
         return Result.Success<CategoriaResponseDto, AppError>(new CategoriaResponseDto(eliminado.Id, eliminado.Nombre));
     }

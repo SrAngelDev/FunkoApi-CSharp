@@ -17,11 +17,16 @@ using Microsoft.IdentityModel.Tokens;
 var builder = WebApplication.CreateBuilder(args);
 
 // 1. Base de Datos
+var connectionString = builder.Configuration.GetConnectionString("FunkoDb");
 builder.Services.AddDbContext<FunkoDbContext>(options =>
-    options.UseInMemoryDatabase("FunkoDb"));
+    options.UseNpgsql(connectionString));
 
-// 2. Caché en Memoria (IMemoryCache)
-builder.Services.AddMemoryCache();
+// 2. Caché con Redis (IDistributedCache)
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration.GetConnectionString("Redis");
+    options.InstanceName = "FunkoApi_"; // Prefijo 
+});
 
 // 3. Repositories (Capa de Datos)
 builder.Services.AddScoped<IFunkoRepository, FunkoRepository>();
