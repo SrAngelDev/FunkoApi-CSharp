@@ -41,7 +41,7 @@ builder.Services.AddScoped<AuthService>();
 
 builder.Services.AddIdentity<User, IdentityRole<long>>(options =>
     {
-        // Configuración de políticas de contraseña (ejemplo de WalaDaw)
+        // Configuración de políticas de contraseña
         options.Password.RequireDigit = true;
         options.Password.RequireLowercase = true;
         options.Password.RequireUppercase = true;

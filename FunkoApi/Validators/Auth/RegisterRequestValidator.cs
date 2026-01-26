@@ -21,6 +21,6 @@ public class RegisterRequestValidator : AbstractValidator<RegisterDto>
             // Coincidiendo con la config de Identity en Program.cs:
             .Matches(@"[A-Z]").WithMessage("La contraseña debe contener al menos una letra mayúscula")
             .Matches(@"[a-z]").WithMessage("La contraseña debe contener al menos una letra minúscula")
-            .Matches(@"[4-12]").WithMessage("La contraseña debe contener al menos un número");
+            .Matches(@"[0-9]").WithMessage("La contraseña debe contener al menos un número");
     }
 }
