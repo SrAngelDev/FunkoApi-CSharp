@@ -4,6 +4,7 @@ using FunkoApi.Data;
 using FunkoApi.Dtos;
 using FunkoApi.Errors;
 using FunkoApi.Models;
+using FunkoApi.Services.Email;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,7 +14,8 @@ public class AuthService(
     UserManager<User> userManager, 
     TokenService tokenService,
     IValidator<RegisterDto> registerValidator,
-    IValidator<LoginDto> loginValidator
+    IValidator<LoginDto> loginValidator,
+    IEmailService emailService
     )  
 {
     public async Task<Result<string, AppError>> RegisterAsync(RegisterDto dto)
@@ -52,6 +54,13 @@ public class AuthService(
         {
              return Result.Failure<string, AppError>(new BusinessRuleError("Error al asignar rol de usuario"));
         }
+        
+        // Enviar email de bienvenida
+        _ = emailService.SendEmailAsync(
+            user.Email!, 
+            "Bienvenido a FunkoApi", 
+            $"<h1>Hola {user.UserName}</h1><p>Gracias por registrarte en nuestra tienda de Funkos.</p>"
+        );
 
         return Result.Success<string, AppError>("Usuario registrado correctamente");
     }

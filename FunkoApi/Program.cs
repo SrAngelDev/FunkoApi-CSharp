@@ -1,20 +1,36 @@
-﻿using System.Text;
+﻿
+using System.Text;
+using FluentValidation;
+using FunkoApi.Auth;
+using FunkoApi.Configuration;
 using FunkoApi.Data;
+using FunkoApi.Dtos;
+using FunkoApi.Errors;
+using FunkoApi.GraphQL;
+using FunkoApi.GraphQL.Types;
+using FunkoApi.Models;
 using FunkoApi.Repositories.Categorias;
 using FunkoApi.Repositories.Funkos;
 using FunkoApi.Services.Categorias;
+using FunkoApi.Services.Email;
 using FunkoApi.Services.Funkos;
-using FunkoApi.Validators.Funkos;
-using Microsoft.EntityFrameworkCore;
-using FluentValidation;
-using FunkoApi.Auth;
-using FunkoApi.Models;
 using FunkoApi.Storage;
+using FunkoApi.Validators.Funkos;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
+
+//Configuracion para el servicio de email
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminPolicy", policy => 
+        policy.RequireRole("ADMIN"));
+});
 
 // 1. Base de Datos
 var connectionString = builder.Configuration.GetConnectionString("FunkoDb");
@@ -38,6 +54,7 @@ builder.Services.AddScoped<ICategoriaService, CategoriaService>();
 builder.Services.AddScoped<IStorageService, LocalStorageService>();
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddTransient<IEmailService, EmailService>();
 
 builder.Services.AddIdentity<User, IdentityRole<long>>(options =>
     {
@@ -73,6 +90,9 @@ builder.Services.AddAuthentication(options =>
         };
     });
 
+// REGISTRO DE GRAPHQL 
+builder.Services.AddGraphQLConfig(); 
+
 // 5. Validadores (FluentValidation)
 builder.Services.AddValidatorsFromAssemblyContaining<FunkoRequestValidator>();
 
@@ -101,6 +121,8 @@ app.UseHttpsRedirection();
 
 app.UseExceptionHandler(); 
 
+app.UseAuthentication();
+
 app.UseAuthorization();
 
 app.MapControllers();
@@ -120,5 +142,8 @@ using (var scope = app.Services.CreateScope())
         logger.LogError(ex, "Ocurrió un error al ejecutar el Seed Data.");
     }
 }
+
+// Mapeo de graphql
+app.MapGraphQL("/graphql");
 
 app.Run();

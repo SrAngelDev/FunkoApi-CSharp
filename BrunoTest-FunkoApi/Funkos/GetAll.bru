@@ -1,0 +1,16 @@
+﻿meta {
+  name: Obtener Todos
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{host}}/funkos
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body: isArray
+}

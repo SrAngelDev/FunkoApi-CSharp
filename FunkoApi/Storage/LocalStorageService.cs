@@ -1,4 +1,7 @@
-﻿namespace FunkoApi.Storage;
+﻿using Path = System.IO.Path;
+
+namespace FunkoApi.Storage;
+
 
 public class LocalStorageService(IWebHostEnvironment environment, ILogger<LocalStorageService> logger) 
     : IStorageService

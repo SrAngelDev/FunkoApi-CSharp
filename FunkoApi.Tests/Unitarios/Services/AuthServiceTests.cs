@@ -9,6 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Moq;
 using NUnit.Framework;
 using CSharpFunctionalExtensions;
+using FunkoApi.Services.Email;
 
 namespace FunkoApi.Tests.Services;
 
@@ -20,6 +21,7 @@ public class AuthServiceTests
     private Mock<IValidator<RegisterDto>> _registerValidatorMock;
     private Mock<IValidator<LoginDto>> _loginValidatorMock;
     private AuthService _authService;
+    private EmailService _emailService;
 
     [SetUp]
     public void SetUp()
@@ -39,16 +41,20 @@ public class AuthServiceTests
         // TokenService real (no mock)
         _tokenService = new TokenService(configurationMock.Object);
 
-        // Validators
+        // Validadores mockeados
         _registerValidatorMock = new Mock<IValidator<RegisterDto>>();
         _loginValidatorMock = new Mock<IValidator<LoginDto>>();
+        
+        //Mock de servicio de email
+        _emailService = new Mock<EmailService>().Object;
 
         // Crear el servicio con los mocks
         _authService = new AuthService(
             _userManagerMock.Object,
             _tokenService,
             _registerValidatorMock.Object,
-            _loginValidatorMock.Object
+            _loginValidatorMock.Object,
+            _emailService
         );
     }
     

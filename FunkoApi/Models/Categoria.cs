@@ -6,4 +6,5 @@ public class Categoria
     public required string Nombre { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+    public List<Funko>? Funkos { get; set; }
 }
