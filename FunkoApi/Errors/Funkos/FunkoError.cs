@@ -1,5 +1,8 @@
-﻿namespace FunkoApi.Errors.Funkos;
+﻿﻿using System.Diagnostics.CodeAnalysis;
 
+namespace FunkoApi.Errors.Funkos;
+
+[ExcludeFromCodeCoverage]
 public static class FunkoError
 {
     public static NotFoundError NotFound(long id) => new($"Funko con ID {id} no encontrado");

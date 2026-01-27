@@ -241,4 +241,149 @@ public class FunkosControllerTests
         // ASSERT
         Assert.That(resultado, Is.InstanceOf<NotFoundObjectResult>());
     }
+
+    [Test]
+    public async Task UpdateImage_CuandoArchivoEsNull_RetornaBadRequest()
+    {
+        // ARRANGE
+        long idExistente = 1;
+
+        // ACT
+        var resultado = await _controller.UpdateImage(idExistente, null!);
+
+        // ASSERT
+        Assert.That(resultado.Result, Is.InstanceOf<BadRequestObjectResult>());
+        
+        var badRequestResult = (BadRequestObjectResult)resultado.Result!;
+        Assert.That(badRequestResult.StatusCode, Is.EqualTo(400));
+    }
+
+    [Test]
+    public async Task UpdateImage_CuandoArchivoVacio_RetornaBadRequest()
+    {
+        // ARRANGE
+        long idExistente = 1;
+        var fileMock = new Mock<Microsoft.AspNetCore.Http.IFormFile>();
+        fileMock.Setup(f => f.Length).Returns(0); // Archivo vacío
+
+        // ACT
+        var resultado = await _controller.UpdateImage(idExistente, fileMock.Object);
+
+        // ASSERT
+        Assert.That(resultado.Result, Is.InstanceOf<BadRequestObjectResult>());
+    }
+
+    [Test]
+    public async Task UpdateImage_CuandoEsValido_RetornaOkConFunkoActualizado()
+    {
+        // ARRANGE
+        long idExistente = 1;
+        var categoriaDto = new CategoriaResponseDto(Guid.NewGuid(), "Marvel");
+        var responseDto = new FunkoResponseDto(
+            idExistente,
+            "Iron Man",
+            categoriaDto,
+            30.0m,
+            "nueva-imagen.png",
+            DateTime.UtcNow,
+            DateTime.UtcNow
+        );
+
+        var fileMock = new Mock<Microsoft.AspNetCore.Http.IFormFile>();
+        fileMock.Setup(f => f.FileName).Returns("test.jpg");
+        fileMock.Setup(f => f.Length).Returns(1024);
+
+        _serviceMock.Setup(s => s.UpdateImageAsync(idExistente, fileMock.Object))
+            .ReturnsAsync(Result.Success<FunkoResponseDto, AppError>(responseDto));
+
+        // ACT
+        var resultado = await _controller.UpdateImage(idExistente, fileMock.Object);
+
+        // ASSERT
+        Assert.That(resultado.Result, Is.InstanceOf<OkObjectResult>());
+        
+        var okResult = (OkObjectResult)resultado.Result!;
+        var model = (FunkoResponseDto)okResult.Value!;
+
+        Assert.That(model.Imagen, Is.EqualTo("nueva-imagen.png"));
+    }
+
+    [Test]
+    public async Task UpdateImage_CuandoFunkoNoExiste_RetornaNotFound()
+    {
+        // ARRANGE
+        long idNoExistente = 99;
+        var error = new NotFoundError("Funko no encontrado");
+
+        var fileMock = new Mock<Microsoft.AspNetCore.Http.IFormFile>();
+        fileMock.Setup(f => f.FileName).Returns("test.jpg");
+        fileMock.Setup(f => f.Length).Returns(1024);
+
+        _serviceMock.Setup(s => s.UpdateImageAsync(idNoExistente, fileMock.Object))
+            .ReturnsAsync(Result.Failure<FunkoResponseDto, AppError>(error));
+
+        // ACT
+        var resultado = await _controller.UpdateImage(idNoExistente, fileMock.Object);
+
+        // ASSERT
+        Assert.That(resultado.Result, Is.InstanceOf<NotFoundObjectResult>());
+    }
+
+    [Test]
+    public async Task Create_CuandoCategoriaNoExiste_RetornaBadRequest()
+    {
+        // ARRANGE
+        var categoriaIdInvalido = Guid.NewGuid();
+        var requestDto = new FunkoRequestDto("Batman", categoriaIdInvalido, 20.0m);
+        var error = new BusinessRuleError($"Categoría {categoriaIdInvalido} no encontrada");
+        
+        _serviceMock.Setup(s => s.CreateAsync(requestDto))
+            .ReturnsAsync(Result.Failure<FunkoResponseDto, AppError>(error));
+
+        // ACT
+        var resultado = await _controller.Create(requestDto);
+
+        // ASSERT
+        Assert.That(resultado.Result, Is.InstanceOf<BadRequestObjectResult>());
+    }
+
+    [Test]
+    public async Task Update_CuandoCategoriaNoExiste_RetornaBadRequest()
+    {
+        // ARRANGE
+        long idExistente = 1;
+        var categoriaIdInvalido = Guid.NewGuid();
+        var requestDto = new FunkoRequestDto("Batman", categoriaIdInvalido, 20.0m);
+        var error = new BusinessRuleError($"Categoría {categoriaIdInvalido} no encontrada");
+
+        _serviceMock.Setup(s => s.UpdateAsync(idExistente, requestDto))
+            .ReturnsAsync(Result.Failure<FunkoResponseDto, AppError>(error));
+
+        // ACT
+        var resultado = await _controller.Update(idExistente, requestDto);
+
+        // ASSERT
+        Assert.That(resultado.Result, Is.InstanceOf<BadRequestObjectResult>());
+    }
+
+    [Test]
+    public async Task HandleError_CuandoConflictError_RetornaConflict()
+    {
+        // ARRANGE
+        long idExistente = 1;
+        var requestDto = new FunkoRequestDto("Batman", Guid.NewGuid(), 20.0m);
+        var error = new ConflictError("Conflicto");
+
+        _serviceMock.Setup(s => s.UpdateAsync(idExistente, requestDto))
+            .ReturnsAsync(Result.Failure<FunkoResponseDto, AppError>(error));
+
+        // ACT
+        var resultado = await _controller.Update(idExistente, requestDto);
+
+        // ASSERT
+        Assert.That(resultado.Result, Is.InstanceOf<ConflictObjectResult>());
+        
+        var conflictResult = (ConflictObjectResult)resultado.Result!;
+        Assert.That(conflictResult.StatusCode, Is.EqualTo(409));
+    }
 }

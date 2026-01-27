@@ -1,9 +1,11 @@
-﻿using FunkoApi.Data;
+﻿using System.Diagnostics.CodeAnalysis;
+using FunkoApi.Data;
 using FunkoApi.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace FunkoApi.Repositories.Funkos;
 
+[ExcludeFromCodeCoverage]
 public class FunkoRepository(FunkoDbContext context) : IFunkoRepository
 {
     

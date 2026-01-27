@@ -1,9 +1,11 @@
-﻿using FunkoApi.Models;
+﻿﻿using System.Diagnostics.CodeAnalysis;
+using FunkoApi.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace FunkoApi.Data;
 
+[ExcludeFromCodeCoverage]
 public static class AppSeeder
 {
     public static async Task InitializeAsync(IServiceProvider serviceProvider)

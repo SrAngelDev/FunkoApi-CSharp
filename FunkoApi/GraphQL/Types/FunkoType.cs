@@ -1,7 +1,9 @@
-﻿using FunkoApi.Models;
+﻿﻿using System.Diagnostics.CodeAnalysis;
+using FunkoApi.Models;
 
 namespace FunkoApi.GraphQL.Types;
 
+[ExcludeFromCodeCoverage]
 public class FunkoType : ObjectType<Funko>
 {
     protected override void Configure(IObjectTypeDescriptor<Funko> descriptor)

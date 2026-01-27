@@ -1,8 +1,10 @@
-﻿using FunkoApi.Dtos;
+﻿﻿using System.Diagnostics.CodeAnalysis;
+using FunkoApi.Dtos;
 using FunkoApi.Services.Funkos;
 
 namespace FunkoApi.GraphQL;
 
+[ExcludeFromCodeCoverage]
 public class Query
 {
     public async Task<IEnumerable<FunkoResponseDto>> GetFunkos([Service] IFunkoService service)

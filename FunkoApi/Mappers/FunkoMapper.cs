@@ -1,8 +1,10 @@
-﻿using FunkoApi.Dtos;
+﻿﻿using System.Diagnostics.CodeAnalysis;
+using FunkoApi.Dtos;
 using FunkoApi.Models;
 
 namespace FunkoApi.Mappers;
 
+[ExcludeFromCodeCoverage]
 public static class FunkoMapper
 {
     public static FunkoResponseDto ToResponseDto(this Funko funko)

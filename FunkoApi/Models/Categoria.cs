@@ -1,5 +1,8 @@
-﻿namespace FunkoApi.Models;
+﻿﻿using System.Diagnostics.CodeAnalysis;
 
+namespace FunkoApi.Models;
+
+[ExcludeFromCodeCoverage]
 public class Categoria
 {
     public Guid Id { get; set; }

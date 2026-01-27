@@ -8,6 +8,8 @@ using FunkoApi.Repositories.Categorias;
 using FunkoApi.Repositories.Funkos;
 using FunkoApi.Mappers;
 using FunkoApi.Storage;
+using FunkoApi.WebSockets;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Caching.Distributed;
 
 namespace FunkoApi.Services.Funkos;
@@ -18,7 +20,8 @@ public class FunkoService(
     IDistributedCache cache,
     IValidator<FunkoRequestDto> validator,
     IStorageService storage,
-    ILogger<FunkoService> logger) : IFunkoService
+    ILogger<FunkoService> logger,
+    IHubContext<FunkoHub> hubContext) : IFunkoService
 {
     // Configuración de expiración para Redis
     private readonly DistributedCacheEntryOptions _cacheOptions = new()
@@ -31,7 +34,7 @@ public class FunkoService(
 
     public async Task<IEnumerable<FunkoResponseDto>> GetAllAsync()
     {
-        // Buscamos en cache
+        // Buscamos en caché
         var cachedData = await cache.GetStringAsync(CacheKeyAll);
         
         if (!string.IsNullOrEmpty(cachedData))
@@ -79,63 +82,86 @@ public class FunkoService(
 
     public async Task<Result<FunkoResponseDto, AppError>> CreateAsync(FunkoRequestDto dto)
     {
-
+        // Primero validamos
         var valResult = await validator.ValidateAsync(dto);
         if (!valResult.IsValid) 
             return Result.Failure<FunkoResponseDto, AppError>(new BusinessRuleError(valResult.Errors.First().ErrorMessage));
-        
+    
+        // Compruebo la categoria si existe
         var categoria = await categoriaRepository.GetByIdAsync(dto.CategoriaId);
         if (categoria == null) 
             return Result.Failure<FunkoResponseDto, AppError>(FunkoError.CategoriaNoEncontrada(dto.CategoriaId.ToString()));
-        
+    
+        // Guardar en BBDD
         var nuevo = await repository.CreateAsync(dto.ToEntity(categoria.Id));
-        await cache.RemoveAsync(CacheKeyAll);
+    
+        // Gestionar la cache
+        await cache.RemoveAsync("cache_key_all");
 
-        return Result.Success<FunkoResponseDto, AppError>(nuevo!.ToResponseDto());
+        var funkoResponse = nuevo!.ToResponseDto();
+        
+        await hubContext.Clients.All.SendAsync("FunkoCreated", funkoResponse);
+        
+        return Result.Success<FunkoResponseDto, AppError>(funkoResponse);
     }
 
     public async Task<Result<FunkoResponseDto, AppError>> UpdateAsync(long id, FunkoRequestDto dto)
     {
+        // Lo primero valido
         var valResult = await validator.ValidateAsync(dto);
         if (!valResult.IsValid) 
             return Result.Failure<FunkoResponseDto, AppError>(new BusinessRuleError(valResult.Errors.First().ErrorMessage));
-        
+    
         var existente = await repository.GetByIdAsync(id);
         if (existente == null) 
             return Result.Failure<FunkoResponseDto, AppError>(FunkoError.NotFound(id));
-        
+    
         var categoria = await categoriaRepository.GetByIdAsync(dto.CategoriaId);
         if (categoria == null) 
             return Result.Failure<FunkoResponseDto, AppError>(FunkoError.CategoriaNoEncontrada(dto.CategoriaId.ToString()));
-        
+    
+        // Actualizo los datos
         existente.Nombre = dto.Nombre;
         existente.Precio = dto.Precio;
         existente.CategoriaId = categoria.Id; 
         existente.UpdatedAt = DateTime.UtcNow; 
-        
-        var actualizado = await repository.UpdateAsync(id, existente);
     
+        // Actualizo en BBDD
+        var actualizado = await repository.UpdateAsync(id, existente);
+
         if (actualizado == null) 
             return Result.Failure<FunkoResponseDto, AppError>(FunkoError.NotFound(id));
-        
+    
+        // Gestiono la cache
         await cache.RemoveAsync(CacheKeyAll); 
         await cache.RemoveAsync(GetKey(id));   
         
-        return Result.Success<FunkoResponseDto, AppError>(actualizado.ToResponseDto());
+        var responseDto = actualizado.ToResponseDto();
+        
+        await hubContext.Clients.All.SendAsync("FunkoUpdated", responseDto);
+
+        return Result.Success<FunkoResponseDto, AppError>(responseDto);
     }
 
     public async Task<Result<FunkoResponseDto, AppError>> DeleteAsync(long id)
     {
+        // Elimino de la BBDD
         var eliminado = await repository.DeleteAsync(id);
-        
+    
+        // Si no existe, devolvemos error
         if (eliminado == null) 
             return Result.Failure<FunkoResponseDto, AppError>(FunkoError.NotFound(id));
-        
+    
+        // Invalido la cache
         await cache.RemoveAsync(CacheKeyAll);
         await cache.RemoveAsync(GetKey(id));
-        
+    
 
-        return Result.Success<FunkoResponseDto, AppError>(eliminado.ToResponseDto());
+        var responseDto = eliminado.ToResponseDto();
+        
+        await hubContext.Clients.All.SendAsync("FunkoDeleted", responseDto.Id);
+        
+        return Result.Success<FunkoResponseDto, AppError>(responseDto);
     }
     
     public async Task<Result<FunkoResponseDto, AppError>> UpdateImageAsync(long id, IFormFile file)

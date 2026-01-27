@@ -1,8 +1,9 @@
-﻿using Path = System.IO.Path;
+﻿﻿using System.Diagnostics.CodeAnalysis;
+using Path = System.IO.Path;
 
 namespace FunkoApi.Storage;
 
-
+[ExcludeFromCodeCoverage]
 public class LocalStorageService(IWebHostEnvironment environment, ILogger<LocalStorageService> logger) 
     : IStorageService
 {

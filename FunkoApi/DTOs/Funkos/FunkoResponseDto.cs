@@ -1,5 +1,8 @@
-﻿namespace FunkoApi.Dtos;
+﻿﻿using System.Diagnostics.CodeAnalysis;
 
+namespace FunkoApi.Dtos;
+
+[ExcludeFromCodeCoverage]
 public record FunkoResponseDto(
     long Id, 
     string Nombre, 

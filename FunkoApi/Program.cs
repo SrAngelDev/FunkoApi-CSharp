@@ -1,5 +1,6 @@
 ﻿
 using System.Text;
+using System.Diagnostics.CodeAnalysis;
 using FluentValidation;
 using FunkoApi.Auth;
 using FunkoApi.Configuration;
@@ -16,6 +17,7 @@ using FunkoApi.Services.Email;
 using FunkoApi.Services.Funkos;
 using FunkoApi.Storage;
 using FunkoApi.Validators.Funkos;
+using FunkoApi.WebSockets;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -32,23 +34,26 @@ builder.Services.AddAuthorization(options =>
         policy.RequireRole("ADMIN"));
 });
 
-// 1. Base de Datos
-var connectionString = builder.Configuration.GetConnectionString("FunkoDb");
-builder.Services.AddDbContext<FunkoDbContext>(options =>
-    options.UseNpgsql(connectionString));
-
-// 2. Caché con Redis (IDistributedCache)
-builder.Services.AddStackExchangeRedisCache(options =>
+// Base de Datos - Solo configurar PostgreSQL si NO estamos en Testing
+if (builder.Environment.EnvironmentName != "Testing")
 {
-    options.Configuration = builder.Configuration.GetConnectionString("Redis");
-    options.InstanceName = "FunkoApi_"; // Prefijo 
-});
+    var connectionString = builder.Configuration.GetConnectionString("FunkoDb");
+    builder.Services.AddDbContext<FunkoDbContext>(options =>
+        options.UseNpgsql(connectionString));
 
-// 3. Repositories (Capa de Datos)
+    // Caché con Redis (IDistributedCache)
+    builder.Services.AddStackExchangeRedisCache(options =>
+    {
+        options.Configuration = builder.Configuration.GetConnectionString("Redis");
+        options.InstanceName = "FunkoApi_"; // Prefijo 
+    });
+}
+
+// Repositories (Capa de Datos)
 builder.Services.AddScoped<IFunkoRepository, FunkoRepository>();
 builder.Services.AddScoped<ICategoriaRepository, CategoriaRepository>();
 
-// 4. Servicios (Capa de Negocio)
+// Servicios (Capa de Negocio)
 builder.Services.AddScoped<IFunkoService, FunkoService>();
 builder.Services.AddScoped<ICategoriaService, CategoriaService>();
 builder.Services.AddScoped<IStorageService, LocalStorageService>();
@@ -93,20 +98,37 @@ builder.Services.AddAuthentication(options =>
 // REGISTRO DE GRAPHQL 
 builder.Services.AddGraphQLConfig(); 
 
-// 5. Validadores (FluentValidation)
+// REGISTRO DE SIGNALR
+builder.Services.AddSignalR(); 
+
+// Validadores (FluentValidation)
 builder.Services.AddValidatorsFromAssemblyContaining<FunkoRequestValidator>();
 
-// 6. Configuración de Controladores y Rutas
+// Configuración de Controladores y Rutas
 builder.Services.AddControllers();
 
-// 7. Swagger/OpenAPI
+// Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// 8. Manejo Global de Errores (ProblemDetails)
+// Manejo Global de Errores (ProblemDetails)
 builder.Services.AddProblemDetails();
 
+// Política CORS (Permisiva para desarrollo)
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("CorsPolicy", policy =>
+    {
+        policy.AllowAnyHeader()
+            .AllowAnyMethod()
+            .SetIsOriginAllowed((host) => true) // Permitir cualquier origen (localhost, archivos locales)
+            .AllowCredentials(); // Necesario para SignalR
+    });
+});
+
 var app = builder.Build();
+
+app.UseCors("CorsPolicy");
 
 // Configuración para entorno de desarrollo
 if (app.Environment.IsDevelopment())
@@ -127,23 +149,34 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// Creamos un scope temporal para obtener los servicios
-using (var scope = app.Services.CreateScope())
+// Creamos un scope temporal para obtener los servicios - Solo si NO estamos en Testing
+if (app.Environment.EnvironmentName != "Testing")
 {
-    var services = scope.ServiceProvider;
-    try
+    using (var scope = app.Services.CreateScope())
     {
-        // Llamamos al método estático del Seeder
-        await AppSeeder.InitializeAsync(services);
-    }
-    catch (Exception ex)
-    {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "Ocurrió un error al ejecutar el Seed Data.");
+        var services = scope.ServiceProvider;
+        try
+        {
+            // Llamamos al método estático del Seeder
+            await AppSeeder.InitializeAsync(services);
+        }
+        catch (Exception ex)
+        {
+            var logger = services.GetRequiredService<ILogger<Program>>();
+            logger.LogError(ex, "Ocurrió un error al ejecutar el Seed Data.");
+        }
     }
 }
 
 // Mapeo de graphql
 app.MapGraphQL("/graphql");
 
+// Mapeo de signalr
+app.MapHub<FunkoHub>("/ws/funkos");
+
 app.Run();
+
+// Hacer Program accesible para tests de integración
+[ExcludeFromCodeCoverage]
+public partial class Program { }
+

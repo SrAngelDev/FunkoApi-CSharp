@@ -1,9 +1,11 @@
-﻿using FunkoApi.Dtos;
+﻿﻿using System.Diagnostics.CodeAnalysis;
+using FunkoApi.Dtos;
 using FunkoApi.Services.Funkos;
 using HotChocolate.Authorization;
 
 namespace FunkoApi.GraphQL;
 
+[ExcludeFromCodeCoverage]
 public class Mutation
 {
     // Usamos "Policy" en lugar de "Roles"

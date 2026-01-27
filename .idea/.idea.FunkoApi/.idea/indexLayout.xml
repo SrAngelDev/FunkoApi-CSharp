@@ -3,6 +3,7 @@
   <component name="UserContentModel">
     <attachedFolders>
       <Path>BrunoTest-FunkoApi</Path>
+      <Path>coverage</Path>
     </attachedFolders>
     <explicitIncludes />
     <explicitExcludes />

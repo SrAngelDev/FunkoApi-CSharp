@@ -1,4 +1,4 @@
-﻿using FunkoApi.Dtos;
+﻿﻿using FunkoApi.Dtos;
 using FunkoApi.Errors;
 using FunkoApi.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 namespace FunkoApi.Controllers;
 
 [ApiController]
-[Route("api/funkos")] 
+[Route("api/funkos")]
 public class FunkosController(IFunkoService service) : ControllerBase
 {
     [HttpGet]

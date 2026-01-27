@@ -1,10 +1,12 @@
-﻿using FunkoApi.Models;
+﻿﻿using System.Diagnostics.CodeAnalysis;
+using FunkoApi.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace FunkoApi.Data;
 
+[ExcludeFromCodeCoverage]
 public class FunkoDbContext(DbContextOptions<FunkoDbContext> options) 
     : IdentityDbContext<User, IdentityRole<long>, long>(options)
 {

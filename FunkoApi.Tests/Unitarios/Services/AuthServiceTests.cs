@@ -21,7 +21,7 @@ public class AuthServiceTests
     private Mock<IValidator<RegisterDto>> _registerValidatorMock;
     private Mock<IValidator<LoginDto>> _loginValidatorMock;
     private AuthService _authService;
-    private EmailService _emailService;
+    private Mock<IEmailService> _emailServiceMock;
 
     [SetUp]
     public void SetUp()
@@ -46,7 +46,7 @@ public class AuthServiceTests
         _loginValidatorMock = new Mock<IValidator<LoginDto>>();
         
         //Mock de servicio de email
-        _emailService = new Mock<EmailService>().Object;
+        _emailServiceMock = new Mock<IEmailService>();
 
         // Crear el servicio con los mocks
         _authService = new AuthService(
@@ -54,7 +54,7 @@ public class AuthServiceTests
             _tokenService,
             _registerValidatorMock.Object,
             _loginValidatorMock.Object,
-            _emailService
+            _emailServiceMock.Object
         );
     }
     

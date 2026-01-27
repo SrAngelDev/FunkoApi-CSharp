@@ -1,9 +1,9 @@
-﻿using FunkoApi.Data;
+﻿using System.Diagnostics.CodeAnalysis;
+using FunkoApi.Data;
 using FunkoApi.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace FunkoApi.Repositories.Categorias;
-
 public class CategoriaRepository(FunkoDbContext context) : ICategoriaRepository
 {
     public async Task<IEnumerable<Categoria>> GetAllAsync()

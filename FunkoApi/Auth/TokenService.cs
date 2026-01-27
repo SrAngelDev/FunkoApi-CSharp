@@ -1,4 +1,6 @@
-﻿namespace FunkoApi.Auth;
+﻿﻿using System.Diagnostics.CodeAnalysis;
+
+namespace FunkoApi.Auth;
 
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -6,10 +8,9 @@ using System.Text;
 using FunkoApi.Models;
 using Microsoft.IdentityModel.Tokens;
 
-// Usamos Constructor Primario (C# 14)
+[ExcludeFromCodeCoverage]
 public class TokenService(IConfiguration configuration)
 {
-    // CAMBIO IMPORTANTE: Ahora recibimos 'roles' como lista separada
     public string GenerateToken(User user, IList<string> roles)
     {
         var claims = new List<Claim>

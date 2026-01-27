@@ -1,5 +1,8 @@
-﻿namespace FunkoApi.Configuration;
+﻿﻿using System.Diagnostics.CodeAnalysis;
 
+namespace FunkoApi.Configuration;
+
+[ExcludeFromCodeCoverage]
 public class EmailSettings
 {
     public string SmtpHost { get; set; } = string.Empty;
