@@ -1,0 +1,27 @@
+meta {
+  name: Crear Funko - Precio Invalido
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{host}}/funkos
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+body:json {
+  {
+    "nombre": "Funko Precio Invalido",
+    "precio": -10,
+    "categoriaId": "{{categoriaId}}"
+  }
+}
+
+assert {
+  res.status: eq 400
+}

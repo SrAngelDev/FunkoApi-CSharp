@@ -1,0 +1,23 @@
+meta {
+  name: Register - Username Corto
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{host}}/auth/register
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "username": "ab",
+    "password": "Password123",
+    "email": "test@example.com"
+  }
+}
+
+assert {
+  res.status: eq 400
+}

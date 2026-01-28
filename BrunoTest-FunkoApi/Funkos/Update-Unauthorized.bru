@@ -1,0 +1,23 @@
+meta {
+  name: Actualizar Funko - Sin Autenticacion
+  type: http
+  seq: 14
+}
+
+put {
+  url: {{host}}/funkos/{{funkoId}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "nombre": "Funko Actualizado",
+    "precio": 29.99,
+    "categoriaId": "{{categoriaId}}"
+  }
+}
+
+assert {
+  res.status: eq 401
+}

@@ -1,0 +1,23 @@
+meta {
+  name: Register - Email Invalido
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{host}}/auth/register
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "username": "testuser",
+    "password": "Password123",
+    "email": "emailinvalido"
+  }
+}
+
+assert {
+  res.status: eq 400
+}

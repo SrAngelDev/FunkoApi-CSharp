@@ -1,0 +1,29 @@
+meta {
+  name: Actualizar Funko (Admin)
+  type: http
+  seq: 7
+}
+
+put {
+  url: {{host}}/funkos/{{funkoId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+body:json {
+  {
+    "nombre": "Funko Actualizado",
+    "precio": 29.99,
+    "categoriaId": "{{categoriaId}}"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.nombre: eq "Funko Actualizado"
+  res.body.precio: eq 29.99
+}

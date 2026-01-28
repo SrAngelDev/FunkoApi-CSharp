@@ -1,0 +1,23 @@
+meta {
+  name: Crear Funko - Sin Autenticacion
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{host}}/funkos
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "nombre": "Funko Sin Auth",
+    "precio": 19.99,
+    "categoriaId": "{{categoriaId}}"
+  }
+}
+
+assert {
+  res.status: eq 401
+}

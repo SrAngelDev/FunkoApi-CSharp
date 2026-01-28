@@ -1,0 +1,23 @@
+meta {
+  name: Actualizar Imagen - Funko No Encontrado
+  type: http
+  seq: 17
+}
+
+patch {
+  url: {{host}}/funkos/999999/imagen
+  body: multipartForm
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+body:multipart-form {
+  ~file: @file(test-image.jpg)
+}
+
+assert {
+  res.status: in [400, 404]
+}

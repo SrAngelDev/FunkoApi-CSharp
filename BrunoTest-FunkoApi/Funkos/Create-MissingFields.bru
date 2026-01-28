@@ -1,0 +1,25 @@
+meta {
+  name: Crear Funko - Campos Faltantes
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{host}}/funkos
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+body:json {
+  {
+    "nombre": "Funko Sin Precio"
+  }
+}
+
+assert {
+  res.status: eq 400
+}

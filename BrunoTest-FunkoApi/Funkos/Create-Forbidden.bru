@@ -1,0 +1,27 @@
+meta {
+  name: Crear Funko - Sin Permisos Admin
+  type: http
+  seq: 11
+}
+
+post {
+  url: {{host}}/funkos
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: invalidToken123
+}
+
+body:json {
+  {
+    "nombre": "Funko Sin Permisos",
+    "precio": 19.99,
+    "categoriaId": "{{categoriaId}}"
+  }
+}
+
+assert {
+  res.status: in [401, 403]
+}

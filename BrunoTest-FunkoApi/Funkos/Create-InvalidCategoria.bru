@@ -1,0 +1,27 @@
+meta {
+  name: Crear Funko - Categoria No Existe
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{host}}/funkos
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+body:json {
+  {
+    "nombre": "Funko Categoria Invalida",
+    "precio": 19.99,
+    "categoriaId": "99999999-9999-9999-9999-999999999999"
+  }
+}
+
+assert {
+  res.status: in [400, 404]
+}

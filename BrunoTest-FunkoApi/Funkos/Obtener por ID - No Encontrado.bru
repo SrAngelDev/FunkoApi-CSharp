@@ -1,0 +1,15 @@
+meta {
+  name: Obtener por ID - No Encontrado
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{host}}/funkos/999999
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 404
+}

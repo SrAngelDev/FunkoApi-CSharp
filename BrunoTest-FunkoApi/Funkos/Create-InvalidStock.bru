@@ -1,0 +1,27 @@
+meta {
+  name: Crear Funko - Precio Cero
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{host}}/funkos
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+body:json {
+  {
+    "nombre": "Funko Precio Cero",
+    "precio": 0,
+    "categoriaId": "{{categoriaId}}"
+  }
+}
+
+assert {
+  res.status: eq 400
+}

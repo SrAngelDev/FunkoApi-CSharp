@@ -1,0 +1,22 @@
+meta {
+  name: Obtener Funko para Categoria
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{host}}/funkos/1
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+}
+
+script:post-response {
+  if (res.status === 200 && res.body.categoria) {
+    bru.setVar("categoriaId", res.body.categoria.id);
+    console.log("Categoria ID capturado:", res.body.categoria.id);
+  }
+}

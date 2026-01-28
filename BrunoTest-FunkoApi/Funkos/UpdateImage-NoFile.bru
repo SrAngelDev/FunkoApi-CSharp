@@ -1,0 +1,23 @@
+meta {
+  name: Actualizar Imagen - Sin Archivo
+  type: http
+  seq: 14
+}
+
+patch {
+  url: {{host}}/funkos/{{funkoId}}/imagen
+  body: multipartForm
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+body:multipart-form {
+
+}
+
+assert {
+  res.status: eq 400
+}

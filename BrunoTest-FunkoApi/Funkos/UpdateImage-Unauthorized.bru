@@ -1,0 +1,19 @@
+meta {
+  name: Actualizar Imagen - Sin Autenticacion
+  type: http
+  seq: 19
+}
+
+patch {
+  url: {{host}}/funkos/{{funkoId}}/imagen
+  body: multipartForm
+  auth: none
+}
+
+body:multipart-form {
+  ~file: @file(test-image.jpg)
+}
+
+assert {
+  res.status: eq 401
+}

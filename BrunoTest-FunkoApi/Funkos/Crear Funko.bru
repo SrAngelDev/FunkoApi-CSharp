@@ -1,4 +1,4 @@
-﻿meta {
+meta {
   name: Crear Funko (Admin)
   type: http
   seq: 2
@@ -18,7 +18,7 @@ body:json {
   {
     "nombre": "Funko Test Bruno",
     "precio": 19.99,
-    "categoriaId": "b3e5e6a0-5678-4abc-8def-1234567890ab" 
+    "categoriaId": "{{categoriaId}}"
   }
 }
 
@@ -26,4 +26,11 @@ assert {
   res.status: eq 201
   res.body.nombre: eq "Funko Test Bruno"
   res.body.id: isNumber
+}
+
+script:post-response {
+  if (res.status === 201) {
+    bru.setVar("funkoId", res.body.id);
+    console.log("Funko creado con ID:", res.body.id);
+  }
 }

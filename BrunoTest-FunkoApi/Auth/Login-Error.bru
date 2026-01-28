@@ -1,0 +1,22 @@
+meta {
+  name: Login - Error
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{host}}/auth/login
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "username": "usuarioInexistente",
+    "password": "passwordIncorrecta"
+  }
+}
+
+assert {
+  res.status: eq 401
+}

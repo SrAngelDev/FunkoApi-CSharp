@@ -1,4 +1,4 @@
-﻿﻿using FunkoApi.Dtos;
+﻿using FunkoApi.Dtos;
 using FunkoApi.Errors;
 using FunkoApi.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -59,7 +59,6 @@ public class FunkosController(IFunkoService service) : ControllerBase
         return Ok(result.Value); 
     }
     
-    // PATCH: api/funkos/5/imagen
     [HttpPatch("{id}/imagen")]
     [Consumes("multipart/form-data")] // Importante para ficheros
     [Authorize(Roles = Roles.Admin)]
