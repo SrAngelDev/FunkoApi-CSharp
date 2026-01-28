@@ -1,0 +1,30 @@
+meta {
+  name: Mutation - CreateFunko Sin Auth
+  type: graphql
+  seq: 5
+}
+
+post {
+  url: http://localhost:5000/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  mutation {
+    createFunko(funkoDto: {
+      nombre: "Funko Sin Auth"
+      precio: 19.99
+      categoriaId: "{{categoriaId}}"
+    }) {
+      id
+      nombre
+      precio
+    }
+  }
+}
+
+assert {
+  res.status: in [200, 500]
+  res.body.errors: isArray
+}

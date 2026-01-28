@@ -1,0 +1,36 @@
+meta {
+  name: SignalR - Crear Funko (Dispara FunkoCreated)
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{host}}/funkos
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+body:json {
+  {
+    "nombre": "Funko SignalR Test",
+    "precio": 29.99,
+    "categoriaId": "{{categoriaId}}"
+  }
+}
+
+assert {
+  res.status: eq 201
+  res.body.nombre: eq "Funko SignalR Test"
+}
+
+script:post-response {
+  if (res.status === 201) {
+    bru.setVar("signalrFunkoId", res.body.id);
+    console.log("✅ Funko creado - El cliente SignalR debería recibir evento 'FunkoCreated'");
+    console.log("Funko ID:", res.body.id);
+  }
+}

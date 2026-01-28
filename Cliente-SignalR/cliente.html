@@ -3,46 +3,293 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test SignalR - FunkoApi</title>
-    <!-- Bootstrap para estilos rápidos -->
+    <title>⚡ NETRUNNER // PROTOCOLO FUNKO</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Librería Cliente de SignalR (Microsoft oficial) -->
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+
+    <style>
+        /* --- ESTÉTICA NUCLEAR --- */
+        :root {
+            --neon-green: #0f0;
+            --neon-pink: #ff00ff;
+            --neon-cyan: #00ffff;
+            --text-white: #ffffff;
+            --bg-color: #050505;
+            --panel-bg: rgba(10, 20, 10, 0.85);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--neon-green);
+            font-family: 'Share Tech Mono', monospace;
+            overflow-x: hidden;
+            margin: 0;
+            height: 100vh;
+            background-image: 
+                linear-gradient(rgba(0, 255, 0, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 0, 0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        /* --- EFECTOS DE PANTALLA CRT --- */
+        .crt-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+            z-index: 9999;
+            animation: flicker 0.15s infinite;
+        }
+
+        @keyframes flicker {
+            0% { opacity: 0.95; }
+            5% { opacity: 0.85; }
+            10% { opacity: 0.95; }
+            100% { opacity: 0.95; }
+        }
+
+        /* --- TIPOGRAFÍA --- */
+        h2.cyber-title {
+            font-family: 'VT323', monospace;
+            font-size: 3rem;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px var(--neon-green);
+            animation: glitch-text 2s infinite linear alternate-reverse;
+            position: relative;
+            color: var(--neon-green);
+        }
+
+        h2.cyber-title::before {
+            content: "📡 MONITOR DE EVENTOS FUNKOAPI";
+            position: absolute;
+            left: 2px;
+            text-shadow: -1px 0 var(--neon-pink);
+            top: 0;
+            color: var(--bg-color);
+            background: var(--neon-green);
+            overflow: hidden;
+            clip: rect(0, 900px, 0, 0); 
+            animation: noise-anim 2s infinite linear alternate-reverse;
+        }
+
+        /* --- PANELES --- */
+        .cyber-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--neon-green);
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
+            position: relative;
+            backdrop-filter: blur(5px);
+            margin-bottom: 2rem;
+            clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%);
+        }
+
+        .cyber-header {
+            background: rgba(0, 255, 0, 0.1);
+            border-bottom: 1px solid var(--neon-green);
+            padding: 10px 15px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--neon-green);
+        }
+
+        /* --- INPUTS --- */
+        .cyber-input {
+            background: #000 !important;
+            border: 1px solid var(--neon-green) !important;
+            color: var(--text-white) !important;
+            font-family: 'Share Tech Mono';
+            border-radius: 0;
+        }
+        
+        .cyber-input:focus {
+            box-shadow: 0 0 15px var(--neon-green);
+            outline: none;
+        }
+
+        /* --- BOTONES --- */
+        .btn-cyber {
+            border: 1px solid var(--neon-green);
+            background: transparent;
+            color: var(--neon-green);
+            text-transform: uppercase;
+            font-weight: bold;
+            padding: 10px 20px;
+            transition: all 0.2s;
+            clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+            cursor: pointer;
+            letter-spacing: 1px;
+        }
+
+        .btn-cyber:hover {
+            background: var(--neon-green);
+            color: #000;
+            box-shadow: 0 0 20px var(--neon-green);
+        }
+
+        .btn-cyber:disabled {
+            border-color: #555;
+            color: #555;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .btn-cyber-danger {
+            border-color: var(--neon-pink);
+            color: var(--neon-pink);
+        }
+        
+        .btn-cyber-danger:hover {
+            background: var(--neon-pink);
+            color: #000;
+            box-shadow: 0 0 20px var(--neon-pink);
+        }
+
+        /* --- CONSOLA DE LOGS --- */
+        #logs {
+            background: #000;
+            border-top: 2px dashed var(--neon-green);
+            color: var(--text-white);
+            font-family: 'VT323', monospace;
+            font-size: 1.2rem;
+            padding: 20px;
+            height: 400px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--neon-green) #000;
+        }
+
+        /* Corrección de color texto */
+        #logs .text-muted {
+            color: rgba(255, 255, 255, 0.8) !important; 
+        }
+
+        pre {
+            color: #fff; 
+            font-size: 1rem;
+            margin-top: 5px;
+            text-shadow: 0 0 2px rgba(255,255,255,0.5);
+        }
+
+        /* Colores de Eventos */
+        .log-entry strong { color: var(--neon-green); }
+        
+        .log-entry.deleted strong { color: var(--neon-pink); }
+        .log-entry.deleted { border-left-color: var(--neon-pink); }
+        
+        .log-entry.updated strong { color: var(--neon-cyan); }
+        .log-entry.updated { border-left-color: var(--neon-cyan); }
+
+        .log-entry {
+            border-left: 3px solid var(--neon-green);
+            padding-left: 10px;
+            margin-bottom: 15px;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        .log-entry:hover { background: rgba(255, 255, 255, 0.05); }
+
+        /* Scrollbar */
+        #logs::-webkit-scrollbar { width: 8px; }
+        #logs::-webkit-scrollbar-track { background: #000; }
+        #logs::-webkit-scrollbar-thumb { background: var(--neon-green); }
+
+        /* --- ANIMACIONES --- */
+        @keyframes blink { 50% { opacity: 0; } }
+        @keyframes slideIn {
+            from { transform: translateX(-20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes noise-anim {
+            0% { clip: rect(12px, 9999px, 56px, 0); }
+            5% { clip: rect(89px, 9999px, 12px, 0); }
+            100% { clip: rect(12px, 9999px, 56px, 0); }
+        }
+
+        #status {
+            font-size: 1.2rem;
+            padding: 5px 15px;
+            text-transform: uppercase;
+            border: 1px solid currentColor;
+            background: transparent;
+        }
+        .status-off { color: #777; border-color: #777 !important; }
+        .status-on { color: var(--neon-green); animation: pulse 1s infinite; box-shadow: 0 0 10px var(--neon-green); }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 5px var(--neon-green); }
+            50% { box-shadow: 0 0 20px var(--neon-green); }
+            100% { box-shadow: 0 0 5px var(--neon-green); }
+        }
+
+        .grid-bg {
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 30vh;
+            background: linear-gradient(transparent 0%, var(--neon-green) 2%, transparent 3%);
+            background-size: 100% 20px;
+            transform: perspective(500px) rotateX(60deg) scale(2);
+            opacity: 0.1;
+            z-index: -1;
+            animation: grid-move 5s linear infinite;
+        }
+        @keyframes grid-move { from { background-position: 0 0; } to { background-position: 0 20px; } }
+    </style>
 </head>
-<body class="bg-light p-4">
+<body class="p-4">
+    <div class="crt-overlay"></div>
+    <div class="grid-bg"></div>
 
-    <div class="container" style="max-width: 800px;">
-        <h2 class="mb-4">📡 Monitor de Eventos FunkoApi</h2>
+    <div class="container" style="max-width: 900px; position: relative; z-index: 1;">
+        
+        <div class="d-flex justify-content-between align-items-end mb-5">
+            <h2 class="cyber-title m-0">📡 MONITOR DE EVENTOS FUNKOAPI</h2>
+            <div class="text-end">
+                <small class="d-block" style="color: #aaa;">CONEXION_SEGURA_V.8.0</small>
+                <small class="d-block" style="color: var(--neon-pink)">ACCESO_NO_AUTORIZADO_DETECTADO</small>
+            </div>
+        </div>
 
-        <!-- Configuración de Conexión -->
-        <div class="card mb-4">
-            <div class="card-header bg-primary text-white">Configuración</div>
+        <div class="cyber-card">
+            <div class="cyber-header">
+                <span>// CONFIG_RED</span>
+                <div id="connection-led" style="width: 10px; height: 10px; background: red; border-radius: 50%; box-shadow: 0 0 10px red;"></div>
+            </div>
             <div class="card-body">
-                <div class="mb-3">
-                    <label class="form-label">URL del Hub:</label>
-                    <input type="text" id="hubUrl" class="form-control" value="https://localhost:TU_PUERTO/ws/funkos">
-                    <div class="form-text">Asegúrate de poner el puerto correcto de tu API (ej: 5001, 7123).</div>
+                <div class="mb-4">
+                    <label class="form-label text-uppercase fw-bold" style="color: #fff">URL OBJETIVO DEL HUB_</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-black text-success border-success">></span>
+                        <input type="text" id="hubUrl" class="form-control cyber-input" value="http://localhost:5000/ws/funkos">
+                    </div>
                 </div>
                 
-                <div class="d-grid gap-2">
-                    <button id="btnConnect" class="btn btn-success">Conectar WebSocket</button>
-                    <button id="btnDisconnect" class="btn btn-danger" disabled>Desconectar</button>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <button id="btnConnect" class="btn btn-cyber w-100">INICIAR_ENLACE [CONECTAR]</button>
+                    </div>
+                    <div class="col-md-6">
+                        <button id="btnDisconnect" class="btn btn-cyber btn-cyber-danger w-100" disabled>TERMINAR_SEÑAL [DESCONECTAR]</button>
+                    </div>
                 </div>
                 
-                <div class="mt-3">
-                    <strong>Estado: </strong> <span id="status" class="badge bg-secondary">Desconectado</span>
+                <div class="mt-4 d-flex align-items-center gap-3">
+                    <strong class="text-uppercase" style="color:#fff">Estado_Enlace: </strong> 
+                    <span id="status" class="status-off">DESCONECTADO</span>
                 </div>
             </div>
         </div>
 
-        <!-- Log de Eventos -->
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span>🔔 Eventos en Tiempo Real</span>
-                <button onclick="clearLogs()" class="btn btn-sm btn-outline-secondary">Limpiar</button>
+        <div class="cyber-card">
+            <div class="cyber-header d-flex justify-content-between align-items-center">
+                <span>// FLUJO_DE_DATOS_ENTRANTE</span>
+                <button onclick="clearLogs()" class="btn btn-sm btn-outline-secondary" style="border: 1px solid #777; color: #fff;">PURGAR_LOGS</button>
             </div>
-            <div class="card-body bg-dark text-warning font-monospace" style="height: 400px; overflow-y: auto;" id="logs">
-                <p class="text-muted">// Esperando conexión...</p>
+            <div id="logs">
+                <p class="text-muted">// SISTEMA: Esperando protocolo de enlace...</p>
             </div>
         </div>
     </div>
@@ -53,88 +300,88 @@
         const btnDisconnect = document.getElementById("btnDisconnect");
         const statusSpan = document.getElementById("status");
         const logContainer = document.getElementById("logs");
+        const led = document.getElementById("connection-led");
 
-        // Función para conectar
         async function connect() {
             const url = document.getElementById("hubUrl").value;
-
-            // 1. Crear la conexión con el Builder
+            addLog("system", "> INICIANDO PROTOCOLO DE ENLACE...");
+            
             connection = new signalR.HubConnectionBuilder()
                 .withUrl(url)
-                .withAutomaticReconnect() // Reintentar si se cae la red
+                .withAutomaticReconnect()
                 .build();
 
-            // 2. Definir los "Listeners" (Escuchadores de eventos)
-            // Estos nombres DEBEN COINCIDIR con los que pusiste en FunkoService.cs
-            
-            // Evento CREAR
-            connection.on("FunkoCreated", (data) => {
-                logEvent("🟢 NUEVO FUNKO CREADO", data);
-            });
+            connection.on("FunkoCreated", (data) => logEvent("🟢 NUEVA_ENTIDAD_DETECTADA", data, "created"));
+            connection.on("FunkoUpdated", (data) => logEvent("🟡 MUTACION_DE_ENTIDAD_DETECTADA", data, "updated"));
+            connection.on("FunkoDeleted", (id) => logEvent("🔴 ENTIDAD_PURGADA", { id: id }, "deleted"));
 
-            // Evento ACTUALIZAR
-            connection.on("FunkoUpdated", (data) => {
-                logEvent("🟡 FUNKO ACTUALIZADO", data);
-            });
-
-            // Evento BORRAR (Aquí recibimos solo el ID o el objeto, según tu implementación)
-            connection.on("FunkoDeleted", (id) => {
-                logEvent("🔴 FUNKO ELIMINADO", { id: id });
-            });
-
-            // 3. Iniciar la conexión
             try {
                 await connection.start();
                 updateUI(true);
-                addLog("system", "✅ Conexión establecida con éxito.");
+                addLog("system", "✅ ACCESO CONCEDIDO. TÚNEL SEGURO ESTABLECIDO.");
             } catch (err) {
-                addLog("error", "❌ Error al conectar: " + err.toString());
+                addLog("error", "❌ FALLO CRÍTICO: " + err.toString());
                 console.error(err);
             }
         }
 
-        // Función para desconectar
         async function disconnect() {
             if (connection) {
                 await connection.stop();
                 updateUI(false);
-                addLog("system", "⏹️ Desconectado.");
+                addLog("system", "⏹️ CONEXIÓN TERMINADA.");
             }
         }
 
-        // Helpers de UI
         btnConnect.addEventListener("click", connect);
         btnDisconnect.addEventListener("click", disconnect);
 
         function updateUI(isConnected) {
             btnConnect.disabled = isConnected;
             btnDisconnect.disabled = !isConnected;
-            statusSpan.textContent = isConnected ? "Conectado" : "Desconectado";
-            statusSpan.className = isConnected ? "badge bg-success" : "badge bg-secondary";
+            if(isConnected) {
+                statusSpan.textContent = "EN LÍNEA";
+                statusSpan.className = "status-on";
+                led.style.background = "#0f0";
+                led.style.boxShadow = "0 0 15px #0f0";
+            } else {
+                statusSpan.textContent = "DESCONECTADO";
+                statusSpan.className = "status-off";
+                led.style.background = "red";
+                led.style.boxShadow = "0 0 10px red";
+            }
             document.getElementById("hubUrl").disabled = isConnected;
         }
 
-        function logEvent(title, data) {
+        function logEvent(title, data, type) {
             const time = new Date().toLocaleTimeString();
             const json = JSON.stringify(data, null, 2);
-            
+            let extraClass = "";
+            if(type === 'deleted') extraClass = "deleted";
+            if(type === 'updated') extraClass = "updated";
+
             const html = `
-                <div class="mb-3 border-bottom border-secondary pb-2">
-                    <span class="text-white">[${time}]</span> <strong>${title}</strong><br>
+                <div class="log-entry ${extraClass}">
+                    <div class="d-flex justify-content-between">
+                        <strong>${title}</strong>
+                        <span style="opacity:0.7">[${time}]</span>
+                    </div>
                     <pre class="m-0">${json}</pre>
                 </div>
             `;
             logContainer.innerHTML += html;
-            logContainer.scrollTop = logContainer.scrollHeight; // Auto-scroll
+            logContainer.scrollTop = logContainer.scrollHeight;
         }
 
         function addLog(type, msg) {
             const color = type === 'error' ? 'text-danger' : 'text-muted';
-            logContainer.innerHTML += `<div class="${color}">${msg}</div>`;
+            const icon = type === 'error' ? '🚫' : '>';
+            logContainer.innerHTML += `<div class="${color} mb-2">${icon} ${msg}</div>`;
+            logContainer.scrollTop = logContainer.scrollHeight;
         }
         
         function clearLogs() {
-            logContainer.innerHTML = '';
+            logContainer.innerHTML = '<div class="text-muted">> LOGS PURGADOS.</div>';
         }
     </script>
 </body>

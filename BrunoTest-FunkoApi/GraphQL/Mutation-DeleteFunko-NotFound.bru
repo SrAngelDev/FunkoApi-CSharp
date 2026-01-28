@@ -1,0 +1,26 @@
+meta {
+  name: Mutation - DeleteFunko NotFound
+  type: graphql
+  seq: 9
+}
+
+post {
+  url: http://localhost:5000/graphql
+  body: graphql
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+body:graphql {
+  mutation {
+    deleteFunko(id: 999999)
+  }
+}
+
+assert {
+  res.status: in [200, 500]
+  res.body.errors: isArray
+}

@@ -1,0 +1,26 @@
+meta {
+  name: Query - GetFunko NotFound
+  type: graphql
+  seq: 3
+}
+
+post {
+  url: http://localhost:5000/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  query {
+    funko(id: 999999) {
+      id
+      nombre
+      precio
+    }
+  }
+}
+
+assert {
+  res.status: in [200, 500]
+  res.body.errors: isArray
+}

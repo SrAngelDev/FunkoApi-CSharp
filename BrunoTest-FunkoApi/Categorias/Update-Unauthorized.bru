@@ -1,0 +1,23 @@
+meta {
+  name: Actualizar Categoria - Sin Autenticacion
+  type: http
+  seq: 9
+}
+
+put {
+  url: {{host}}/categorias/{{testCategoriaId}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "nombre": "Categoria No Autorizada",
+    "descripcion": "Sin autorizacion",
+    "activo": true
+  }
+}
+
+assert {
+  res.status: eq 401
+}

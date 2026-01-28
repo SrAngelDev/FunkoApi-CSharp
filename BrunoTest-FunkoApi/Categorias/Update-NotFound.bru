@@ -1,0 +1,27 @@
+meta {
+  name: Actualizar Categoria - No Encontrado
+  type: http
+  seq: 8
+}
+
+put {
+  url: {{host}}/categorias/00000000-0000-0000-0000-000000000000
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+body:json {
+  {
+    "nombre": "Categoria Inexistente",
+    "descripcion": "No deberia actualizarse",
+    "activo": true
+  }
+}
+
+assert {
+  res.status: eq 404
+}

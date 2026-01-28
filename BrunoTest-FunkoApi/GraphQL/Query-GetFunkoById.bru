@@ -1,0 +1,32 @@
+meta {
+  name: Query - GetFunkoById
+  type: graphql
+  seq: 2
+}
+
+post {
+  url: http://localhost:5000/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  query {
+    funko(id: 1) {
+      id
+      nombre
+      precio
+      imagen
+      categoria {
+        id
+        nombre
+      }
+    }
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.data: isDefined
+  res.body.data.funko: isDefined
+}

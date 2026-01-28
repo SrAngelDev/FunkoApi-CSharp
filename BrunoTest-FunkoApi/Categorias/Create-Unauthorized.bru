@@ -1,0 +1,23 @@
+meta {
+  name: Crear Categoria - Sin Autenticacion
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{host}}/categorias
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "nombre": "Categoria Sin Auth",
+    "descripcion": "Test sin autenticacion",
+    "activo": true
+  }
+}
+
+assert {
+  res.status: eq 401
+}

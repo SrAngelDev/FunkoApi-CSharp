@@ -1,0 +1,27 @@
+meta {
+  name: Mutation - DeleteFunko (Admin)
+  type: graphql
+  seq: 7
+}
+
+post {
+  url: http://localhost:5000/graphql
+  body: graphql
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+body:graphql {
+  mutation {
+    deleteFunko(id: {{graphqlFunkoId}})
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.data: isDefined
+  res.body.data.deleteFunko: eq true
+}

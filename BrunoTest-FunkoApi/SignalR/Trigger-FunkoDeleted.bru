@@ -1,0 +1,26 @@
+meta {
+  name: SignalR - Eliminar Funko (Dispara FunkoDeleted)
+  type: http
+  seq: 3
+}
+
+delete {
+  url: {{host}}/funkos/{{signalrFunkoId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+assert {
+  res.status: eq 204
+}
+
+script:post-response {
+  if (res.status === 204) {
+    console.log("✅ Funko eliminado - El cliente SignalR debería recibir evento 'FunkoDeleted'");
+    console.log("Funko ID eliminado:", bru.getVar("signalrFunkoId"));
+  }
+}

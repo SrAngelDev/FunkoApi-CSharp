@@ -1,0 +1,74 @@
+meta {
+  name: SignalR - Test Completo (Crear-Actualizar-Eliminar)
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{host}}/funkos
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+body:json {
+  {
+    "nombre": "Funko Ciclo Completo SignalR",
+    "precio": 19.99,
+    "categoriaId": "{{categoriaId}}"
+  }
+}
+
+assert {
+  res.status: eq 201
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const funkoId = res.body.id;
+    bru.setVar("cicloFunkoId", funkoId);
+    
+    console.log("🚀 INICIO: Ciclo completo de SignalR");
+    console.log("1️⃣ Funko creado (FunkoCreated):", funkoId);
+    console.log("⏳ Esperando para actualizar...");
+    
+    // Actualizar después de 2 segundos
+    setTimeout(async () => {
+      const updateResponse = await fetch(`http://localhost:5000/api/funkos/${funkoId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${bru.getVar("authToken")}`
+        },
+        body: JSON.stringify({
+          nombre: "Funko Actualizado SignalR",
+          precio: 24.99,
+          categoriaId: bru.getVar("categoriaId")
+        })
+      });
+      
+      if (updateResponse.ok) {
+        console.log("2️⃣ Funko actualizado (FunkoUpdated):", funkoId);
+        console.log("⏳ Esperando para eliminar...");
+        
+        // Eliminar después de 2 segundos más
+        setTimeout(async () => {
+          const deleteResponse = await fetch(`http://localhost:5000/api/funkos/${funkoId}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${bru.getVar("authToken")}`
+            }
+          });
+          
+          if (deleteResponse.status === 204) {
+            console.log("3️⃣ Funko eliminado (FunkoDeleted):", funkoId);
+            console.log("✅ CICLO COMPLETO: El cliente SignalR debería haber recibido 3 eventos");
+          }
+        }, 2000);
+      }
+    }, 2000);
+  }
+}

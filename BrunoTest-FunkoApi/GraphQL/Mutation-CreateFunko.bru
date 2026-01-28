@@ -1,0 +1,47 @@
+meta {
+  name: Mutation - CreateFunko (Admin)
+  type: graphql
+  seq: 4
+}
+
+post {
+  url: http://localhost:5000/graphql
+  body: graphql
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+body:graphql {
+  mutation {
+    createFunko(funkoDto: {
+      nombre: "Funko GraphQL Test"
+      precio: 24.99
+      categoriaId: "{{categoriaId}}"
+    }) {
+      id
+      nombre
+      precio
+      imagen
+      categoria {
+        id
+        nombre
+      }
+    }
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.data: isDefined
+  res.body.data.createFunko: isDefined
+}
+
+script:post-response {
+  if (res.status === 200 && res.body.data && res.body.data.createFunko) {
+    bru.setVar("graphqlFunkoId", res.body.data.createFunko.id);
+    console.log("Funko creado via GraphQL con ID:", res.body.data.createFunko.id);
+  }
+}

@@ -1,9 +1,10 @@
-﻿using System.Net;
+﻿﻿using System.Net;
 using System.Net.Http.Json;
 using FunkoApi.Dtos;
+using FunkoApi.Tests.Integration;
 using NUnit.Framework;
 
-namespace FunkoApi.Tests.Integration.Auth;
+namespace FunkoApi.Tests.Integracion.Auth;
 
 [TestFixture]
 public class AuthControllerIntegrationTests

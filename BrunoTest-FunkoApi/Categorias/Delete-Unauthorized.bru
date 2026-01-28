@@ -1,0 +1,15 @@
+meta {
+  name: Eliminar Categoria - Sin Autenticacion
+  type: http
+  seq: 12
+}
+
+delete {
+  url: {{host}}/categorias/{{categoriaId}}
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 401
+}

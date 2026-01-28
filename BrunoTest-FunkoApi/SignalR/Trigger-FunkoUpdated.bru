@@ -1,0 +1,35 @@
+meta {
+  name: SignalR - Actualizar Funko (Dispara FunkoUpdated)
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{host}}/funkos/{{signalrFunkoId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+body:json {
+  {
+    "nombre": "Funko SignalR Actualizado",
+    "precio": 34.99,
+    "categoriaId": "{{categoriaId}}"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.nombre: eq "Funko SignalR Actualizado"
+}
+
+script:post-response {
+  if (res.status === 200) {
+    console.log("✅ Funko actualizado - El cliente SignalR debería recibir evento 'FunkoUpdated'");
+    console.log("Funko actualizado:", res.body);
+  }
+}

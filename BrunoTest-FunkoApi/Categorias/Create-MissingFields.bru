@@ -1,0 +1,25 @@
+meta {
+  name: Crear Categoria - Campos Faltantes
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{host}}/categorias
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+body:json {
+  {
+    "descripcion": "Sin nombre"
+  }
+}
+
+assert {
+  res.status: eq 400
+}

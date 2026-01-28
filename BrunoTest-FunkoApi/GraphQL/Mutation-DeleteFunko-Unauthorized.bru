@@ -1,0 +1,22 @@
+meta {
+  name: Mutation - DeleteFunko Sin Auth
+  type: graphql
+  seq: 8
+}
+
+post {
+  url: http://localhost:5000/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  mutation {
+    deleteFunko(id: 1)
+  }
+}
+
+assert {
+  res.status: in [200, 500]
+  res.body.errors: isArray
+}

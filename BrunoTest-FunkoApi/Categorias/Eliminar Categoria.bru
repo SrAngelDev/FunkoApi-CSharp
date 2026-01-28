@@ -1,0 +1,19 @@
+meta {
+  name: Eliminar Categoria (Admin)
+  type: http
+  seq: 10
+}
+
+delete {
+  url: {{host}}/categorias/{{testCategoriaId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+assert {
+  res.status: eq 204
+}

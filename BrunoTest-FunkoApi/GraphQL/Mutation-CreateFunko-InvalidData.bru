@@ -1,0 +1,34 @@
+meta {
+  name: Mutation - CreateFunko Invalid Data
+  type: graphql
+  seq: 6
+}
+
+post {
+  url: http://localhost:5000/graphql
+  body: graphql
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+body:graphql {
+  mutation {
+    createFunko(funkoDto: {
+      nombre: "Funko Invalid"
+      precio: -10
+      categoriaId: "{{categoriaId}}"
+    }) {
+      id
+      nombre
+      precio
+    }
+  }
+}
+
+assert {
+  res.status: in [200, 500]
+  res.body.errors: isArray
+}

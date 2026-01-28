@@ -1,10 +1,11 @@
-﻿using System.Net;
+﻿﻿using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using FunkoApi.Dtos;
+using FunkoApi.Tests.Integration;
 using NUnit.Framework;
 
-namespace FunkoApi.Tests.Integration.Controllers;
+namespace FunkoApi.Tests.Integracion.Controllers;
 
 [TestFixture]
 public class FunkosControllerIntegrationTests

@@ -1,22 +1,23 @@
 meta {
-  name: Obtener Funko para Categoria
+  name: Obtener Todas Categorias
   type: http
   seq: 1
 }
 
 get {
-  url: {{host}}/funkos/1
+  url: {{host}}/categorias
   body: none
   auth: none
 }
 
 assert {
   res.status: eq 200
+  res.body: isArray
 }
 
 script:post-response {
-  if (res.status === 200 && res.body.categoria) {
-    bru.setVar("categoriaId", res.body.categoria.id);
-    console.log("Categoria ID capturado:", res.body.categoria.id);
+  if (res.status === 200 && res.body.length > 0) {
+    bru.setVar("categoriaId", res.body[0].id);
+    console.log("Categoria ID capturado:", res.body[0].id);
   }
 }

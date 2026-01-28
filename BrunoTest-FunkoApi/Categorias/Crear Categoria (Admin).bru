@@ -1,0 +1,36 @@
+meta {
+  name: Crear Categoria (Admin)
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{host}}/categorias
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+body:json {
+  {
+    "nombre": "Categoria Test Bruno",
+    "descripcion": "Descripcion de prueba",
+    "activo": true
+  }
+}
+
+assert {
+  res.status: eq 201
+  res.body.nombre: eq "Categoria Test Bruno"
+  res.body.id: isDefined
+}
+
+script:post-response {
+  if (res.status === 201) {
+    bru.setVar("testCategoriaId", res.body.id);
+    console.log("Categoria creada con ID:", res.body.id);
+  }
+}

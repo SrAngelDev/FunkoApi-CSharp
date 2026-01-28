@@ -1,0 +1,29 @@
+meta {
+  name: Actualizar Categoria (Admin)
+  type: http
+  seq: 7
+}
+
+put {
+  url: {{host}}/categorias/{{testCategoriaId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+body:json {
+  {
+    "nombre": "Categoria Actualizada",
+    "descripcion": "Descripcion actualizada",
+    "activo": false
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.nombre: eq "Categoria Actualizada"
+  res.body.id: isDefined
+}

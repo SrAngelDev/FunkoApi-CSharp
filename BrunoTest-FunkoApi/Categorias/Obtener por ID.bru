@@ -1,0 +1,17 @@
+meta {
+  name: Obtener por ID
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{host}}/categorias/{{categoriaId}}
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.id: isDefined
+  res.body.nombre: isDefined
+}
