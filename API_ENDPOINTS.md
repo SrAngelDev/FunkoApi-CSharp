@@ -553,4 +553,4 @@ Ver documentación en `/graphql/playground` (entorno de desarrollo)
 
 ---
 
-**Última actualización**: 27 de enero de 2026
+**Última actualización**: 28 de enero de 2026

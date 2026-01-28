@@ -1,5 +1,4 @@
-﻿# Script para generar reporte de cobertura excluyendo clases marcadas con [ExcludeFromCodeCoverage]
-# Ejecutar desde la raíz del proyecto: .\test.ps1
+﻿# Script para generar reporte de cobertura excluyendo clases clases en el informe mediente classfilters
 
 Write-Host "Limpiando carpetas de reportes anteriores..." -ForegroundColor Yellow
 
@@ -41,5 +40,5 @@ reportgenerator `
 Write-Host "`nReporte generado en: coverage\index.html" -ForegroundColor Green
 Write-Host "Abriendo reporte..." -ForegroundColor Cyan
 
-# Abrir el reporte en el navegador
+# Abrir el reporte en el navegador automáticamente
 Start-Process "coverage\index.html"
